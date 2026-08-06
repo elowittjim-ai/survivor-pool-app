@@ -188,17 +188,26 @@ export async function closeWeek(prevState, formData) {
 
   const { data: allPicks } = await supabase
     .from("picks")
-    .select("player_id, contestant_id");
+    .select("player_id, week, contestant_id, contestants(status, eliminated_week)");
 
+  // A player who was already knocked out in an earlier week shouldn't get a
+  // fresh auto-pick here — once you're out, you're out. Only picks from
+  // weeks before this one count toward that (this week's own elimination,
+  // just recorded above, doesn't retroactively disqualify anyone from it).
   const usedByPlayer = new Map();
+  const alreadyOutPlayers = new Set();
   for (const p of allPicks || []) {
     if (!usedByPlayer.has(p.player_id)) usedByPlayer.set(p.player_id, new Set());
     usedByPlayer.get(p.player_id).add(p.contestant_id);
+    const c = p.contestants;
+    if (p.week < week && c && c.status === "eliminated" && c.eliminated_week === p.week) {
+      alreadyOutPlayers.add(p.player_id);
+    }
   }
 
   const stragglerRows = [];
   for (const player of approvedPlayers || []) {
-    if (pickedThisWeek.has(player.id)) continue;
+    if (pickedThisWeek.has(player.id) || alreadyOutPlayers.has(player.id)) continue;
     const used = usedByPlayer.get(player.id) || new Set();
     let eligible = (pool || []).filter((c) => !used.has(c.id));
     if (eligible.length === 0 && (pool || []).length > 0) eligible = pool;
