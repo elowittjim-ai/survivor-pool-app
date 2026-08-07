@@ -1,7 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+
+async function siteUrl() {
+  const h = await headers();
+  const host = h.get("host");
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  return `${protocol}://${host}`;
+}
 
 export async function login(prevState, formData) {
   const email = String(formData.get("email") || "").trim();
@@ -19,6 +27,23 @@ export async function login(prevState, formData) {
   }
 
   redirect("/");
+}
+
+export async function requestPasswordReset(prevState, formData) {
+  const email = String(formData.get("email") || "").trim();
+  if (!email) return { error: "Enter your email." };
+
+  const supabase = await createClient();
+  const origin = await siteUrl();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/confirm?next=/reset-password`,
+  });
+
+  // Don't reveal whether that email has an account — same message either way.
+  if (error) {
+    return { error: "Couldn't send a reset email right now. Try again in a bit." };
+  }
+  return { success: "If that email has an account, a reset link is on its way." };
 }
 
 export async function signup(prevState, formData) {
