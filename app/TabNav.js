@@ -3,7 +3,10 @@ import Link from "next/link";
 export default function TabNav({ active, showResults }) {
   return (
     <nav className="sp-tabs">
-      <Link href="/" className={"sp-tab" + (active === "pick" ? " sp-tab-active" : "")}>
+      <Link href="/" className={"sp-tab" + (active === "home" ? " sp-tab-active" : "")}>
+        🏝️ Home
+      </Link>
+      <Link href="/pick" className={"sp-tab" + (active === "pick" ? " sp-tab-active" : "")}>
         🔥 Pick
       </Link>
       <Link href="/grid" className={"sp-tab" + (active === "grid" ? " sp-tab-active" : "")}>

@@ -321,6 +321,24 @@ export async function fixContestantStatus(prevState, formData) {
   return { success: true };
 }
 
+export async function updateCommissionerMessage(prevState, formData) {
+  const message = String(formData.get("message") || "").trim();
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase
+    .from("season_state")
+    .update({ commissioner_message: message || null })
+    .eq("id", 1);
+
+  if (error) return { error: "Couldn't save that message." };
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function declareWinner(prevState, formData) {
   const contestantId = String(formData.get("contestantId") || "");
   if (!contestantId) return { error: "Pick a winner." };

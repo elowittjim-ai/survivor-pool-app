@@ -12,9 +12,41 @@ import {
   toggleMute,
   fixPick,
   fixContestantStatus,
+  updateCommissionerMessage,
 } from "./actions";
 
 const initialState = { error: null, success: false };
+
+function CommissionerMessageCard({ currentMessage }) {
+  const [state, formAction, pending] = useActionState(updateCommissionerMessage, initialState);
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">📣 Message from the Commissioner</div>
+      <p className="sp-section-sub">
+        Shown on everyone&apos;s Home screen. Leave it blank to hide the section entirely.
+      </p>
+      {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
+      {state?.success && (
+        <div className="sp-banner" style={{ margin: "0 0 10px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}>
+          Saved.
+        </div>
+      )}
+      <form action={formAction} className="sp-form">
+        <textarea
+          className="sp-input"
+          name="message"
+          rows={3}
+          defaultValue={currentMessage || ""}
+          placeholder="e.g. Reminder: picks lock Sunday 8pm before the episode airs!"
+          style={{ resize: "vertical", fontFamily: "inherit" }}
+        />
+        <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
+          {pending ? "Saving…" : "Save message"}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 function ApproveRow({ player }) {
   const [state, formAction, pending] = useActionState(approvePlayer, initialState);
@@ -387,9 +419,11 @@ export default function AdminView({
   recentCorrections,
   currentWeek,
   isComplete,
+  commissionerMessage,
 }) {
   return (
     <div>
+      <CommissionerMessageCard currentMessage={commissionerMessage} />
       {pendingPlayers.length > 0 && (
         <div className="sp-card">
           <div className="sp-section-title">Pending approvals</div>

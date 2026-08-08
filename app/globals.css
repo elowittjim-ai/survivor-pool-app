@@ -314,6 +314,31 @@ a {
   border-bottom: none;
 }
 
+.sp-hero {
+  text-align: center;
+  border-radius: 14px;
+  padding: 28px 20px;
+  margin-bottom: 14px;
+  background: linear-gradient(160deg, var(--sp-ember-soft), var(--sp-teal-soft));
+  border: 1px solid var(--sp-border);
+}
+
+.sp-hero-mark {
+  font-size: 36px;
+  margin-bottom: 6px;
+}
+
+.sp-hero-title {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+
+.sp-hero-sub {
+  font-size: 13px;
+  color: var(--sp-text-soft);
+  margin: 0;
+}
+
 .sp-status-out {
   font-size: 11px;
   background: var(--sp-danger-soft);

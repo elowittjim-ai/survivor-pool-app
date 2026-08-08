@@ -52,7 +52,7 @@ export default async function AdminPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete")
+    .select("current_week, is_complete, commissioner_message")
     .eq("id", 1)
     .single();
 
@@ -67,7 +67,7 @@ export default async function AdminPage() {
           </div>
         </div>
         <div className="sp-header-right">
-          <Link href="/" className="sp-btn sp-btn-secondary">Pick screen</Link>
+          <Link href="/pick" className="sp-btn sp-btn-secondary">Pick screen</Link>
           <span className="sp-user-chip">👤 {profile.display_name}</span>
           <form action={signOut}>
             <button type="submit" className="sp-btn sp-btn-secondary">Sign out</button>
@@ -84,6 +84,7 @@ export default async function AdminPage() {
           recentCorrections={recentCorrections || []}
           currentWeek={seasonState?.current_week ?? 1}
           isComplete={!!seasonState?.is_complete}
+          commissionerMessage={seasonState?.commissioner_message}
         />
       </main>
     </div>

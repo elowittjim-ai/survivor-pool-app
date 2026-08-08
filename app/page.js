@@ -2,10 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
-import PickView from "./PickView";
 import TabNav from "./TabNav";
 
-export default async function Home() {
+export default async function HomePage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,41 +26,10 @@ export default async function Home() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete")
+    .select("current_week, is_complete, commissioner_message")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
-
-  const { data: contestants } = await supabase
-    .from("contestants")
-    .select("id, name, tribe")
-    .eq("status", "active")
-    .order("name");
-
-  const { data: myPicks } = await supabase
-    .from("picks")
-    .select("week, contestant_id, contestants(name, status, eliminated_week)")
-    .eq("player_id", user.id)
-    .order("week");
-
-  const picks = myPicks || [];
-
-  let meStatus = { alive: true };
-  for (const pick of picks) {
-    if (pick.week >= currentWeek) continue;
-    const c = pick.contestants;
-    if (c && c.status === "eliminated" && c.eliminated_week === pick.week) {
-      meStatus = { alive: false, outWeek: pick.week, outContestant: c.name };
-      break;
-    }
-  }
-
-  const usedIds = picks.filter((p) => p.week < currentWeek).map((p) => p.contestant_id);
-  const active = contestants || [];
-  const eligibleCount = active.filter((c) => !usedIds.includes(c.id)).length;
-  const clearedBoard = eligibleCount === 0 && active.length > 0;
-
-  const currentPick = picks.find((p) => p.week === currentWeek) || null;
 
   return (
     <div>
@@ -84,27 +52,37 @@ export default async function Home() {
         </div>
       </div>
 
-      <TabNav active="pick" showResults={!!seasonState?.is_complete} />
+      <TabNav active="home" showResults={!!seasonState?.is_complete} />
 
       <main className="sp-main">
-        {meStatus.alive ? (
-          <PickView
-            week={currentWeek}
-            contestants={active}
-            usedIds={usedIds}
-            clearedBoard={clearedBoard}
-            currentPickId={currentPick?.contestant_id || null}
-            currentPickName={currentPick?.contestants?.name || null}
-          />
-        ) : (
+        <div className="sp-hero">
+          <div className="sp-hero-mark">🏝️🔥</div>
+          <div className="sp-display sp-hero-title">Welcome back, {profile.display_name}</div>
+          <p className="sp-hero-sub">Week {currentWeek} is underway — outwit, outplay, outlast.</p>
+          <Link href="/pick" className="sp-btn sp-btn-primary" style={{ marginTop: 14 }}>
+            🔥 Make this week&apos;s pick
+          </Link>
+        </div>
+
+        {seasonState?.commissioner_message && (
           <div className="sp-card">
-            <div className="sp-section-title">You&apos;re out for this season</div>
-            <p className="sp-section-sub">
-              You picked {meStatus.outContestant}, who was voted out in week {meStatus.outWeek}.
+            <div className="sp-section-title">📣 From the Commissioner</div>
+            <p className="sp-section-sub" style={{ whiteSpace: "pre-wrap" }}>
+              {seasonState.commissioner_message}
             </p>
-            <div className="sp-status-out">💀 Eliminated week {meStatus.outWeek}</div>
           </div>
         )}
+
+        <div className="sp-card">
+          <div className="sp-section-title">How it works</div>
+          <p className="sp-section-sub">
+            Every week, pick one contestant you think survives the episode. You can&apos;t pick
+            the same contestant twice — unless you&apos;ve used everyone at least once, in which
+            case the board clears and everyone&apos;s eligible again. If your pick gets voted
+            out, you&apos;re out for the season. Miss the deadline and you get an automatic
+            pick so you&apos;re never skipped. Last player(s) standing split the pot.
+          </p>
+        </div>
       </main>
     </div>
   );
