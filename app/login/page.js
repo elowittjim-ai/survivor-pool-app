@@ -35,8 +35,7 @@ export default async function LoginPage() {
         <div className="sp-card" style={{ marginTop: 20 }}>
           <div className="sp-section-title">Waiting on approval</div>
           <p className="sp-section-sub">
-            Hey {profile?.display_name || user.email} — your account is created. Send your
-            ${buyIn} buy-in below, and the commissioner unlocks the pool once it&apos;s in.
+            {`Hey ${profile?.display_name || user.email} — your account is created. Send your $${buyIn} buy-in below, and the commissioner unlocks the pool once it's in.`}
           </p>
           <a
             href={venmoUrl}
