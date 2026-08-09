@@ -68,12 +68,12 @@ function BulkApproveCard() {
   const [state, formAction, pending] = useActionState(bulkApprove, initialState);
   return (
     <div className="sp-card">
-      <div className="sp-section-title">Bulk-approve by email</div>
+      <div className="sp-section-title">Approve by email</div>
       <p className="sp-section-sub">
         Paste the emails of everyone whose buy-in you&apos;ve confirmed (one per line, or
-        comma-separated). Anyone who&apos;s already signed up with a matching email gets
-        approved in one go — this doesn&apos;t create accounts for people who haven&apos;t
-        signed up yet.
+        comma-separated) — works whether they&apos;ve already signed up or not. Already
+        signed up? Approved instantly. Haven&apos;t signed up yet? They&apos;re cleared in
+        advance and get approved automatically the moment they do.
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {state?.summary && (

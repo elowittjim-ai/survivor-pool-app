@@ -97,13 +97,24 @@ export async function bulkApprove(prevState, formData) {
   if (error) return { error: "Couldn't bulk-approve — try again." };
 
   const matchedEmails = new Set((matches || []).map((m) => m.email));
-  const notFound = emails.filter((e) => !matchedEmails.has(e));
+  const notYetSignedUp = emails.filter((e) => !matchedEmails.has(e));
+
+  // Anyone who hasn't signed up yet gets pre-cleared — the signup trigger
+  // checks this table and approves them the moment they create an account.
+  if (notYetSignedUp.length > 0) {
+    const { error: preApproveError } = await supabase
+      .from("pre_approved_emails")
+      .upsert(notYetSignedUp.map((email) => ({ email })), { onConflict: "email" });
+    if (preApproveError) return { error: "Couldn't bulk-approve — try again." };
+  }
 
   revalidatePath("/admin");
   return {
     success: true,
-    summary: `Approved ${matches?.length || 0} of ${emails.length}.` +
-      (notFound.length > 0 ? ` No pending signup yet for: ${notFound.join(", ")}.` : ""),
+    summary: `Approved ${matches?.length || 0} of ${emails.length} right away.` +
+      (notYetSignedUp.length > 0
+        ? ` ${notYetSignedUp.length} haven't signed up yet — they'll be approved automatically the moment they do.`
+        : ""),
   };
 }
 
