@@ -46,7 +46,19 @@ export default async function LoginPage() {
           >
             💸 Pay ${buyIn} on Venmo
           </a>
-          <p className="sp-notice">
+          <p
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: "var(--sp-text)",
+              background: "var(--sp-gold-soft)",
+              border: "1px solid var(--sp-gold)",
+              borderRadius: 8,
+              padding: "10px 12px",
+              margin: "10px 0 0",
+              lineHeight: 1.4,
+            }}
+          >
             When you pay, put your game name and email in the Venmo note — I need an
             individual email from every player, even if someone else is covering your
             buy-in.
