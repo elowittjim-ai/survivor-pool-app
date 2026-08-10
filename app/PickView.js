@@ -51,7 +51,9 @@ export default function PickView({ week, contestants, usedIds, clearedBoard, cur
                 if (!isUsed) setSelectedId(c.id);
               }}
             >
-              <div className="sp-avatar">{initials(c.name)}</div>
+              <div className="sp-avatar">
+                {c.photo_url ? <img src={c.photo_url} alt={c.name} /> : initials(c.name)}
+              </div>
               <p className="sp-c-name" style={selected ? { color: "var(--sp-ember)" } : undefined}>
                 {c.name}
               </p>

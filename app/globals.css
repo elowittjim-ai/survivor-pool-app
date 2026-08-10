@@ -223,6 +223,13 @@ a {
   font-size: 13px;
   font-weight: 600;
   color: var(--sp-text-soft);
+  overflow: hidden;
+}
+
+.sp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sp-c-name {

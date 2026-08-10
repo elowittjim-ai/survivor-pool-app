@@ -400,7 +400,9 @@ function FinaleCard({ activeContestants, isComplete }) {
               style={{ width: "100%", border: "1px solid var(--sp-border)" }}
               disabled={pending}
             >
-              <div className="sp-avatar">{c.name.slice(0, 2).toUpperCase()}</div>
+              <div className="sp-avatar">
+                {c.photo_url ? <img src={c.photo_url} alt={c.name} /> : c.name.slice(0, 2).toUpperCase()}
+              </div>
               <p className="sp-c-name">{c.name}</p>
             </button>
           </form>

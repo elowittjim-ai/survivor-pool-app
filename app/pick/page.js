@@ -34,7 +34,7 @@ export default async function PickPage() {
 
   const { data: contestants } = await supabase
     .from("contestants")
-    .select("id, name, tribe")
+    .select("id, name, tribe, photo_url")
     .eq("status", "active")
     .order("name");
 

@@ -46,7 +46,12 @@ export default async function LoginPage() {
           >
             💸 Pay ${buyIn} on Venmo
           </a>
-          <form action={signOut}>
+          <p className="sp-notice">
+            When you pay, put your game name and email in the Venmo note — I need an
+            individual email from every player, even if someone else is covering your
+            buy-in.
+          </p>
+          <form action={signOut} style={{ marginTop: 14 }}>
             <button type="submit" className="sp-btn sp-btn-secondary sp-btn-block">
               Sign out
             </button>
