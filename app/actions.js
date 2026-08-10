@@ -52,6 +52,7 @@ export async function submitPick(prevState, formData) {
     return { error: "Couldn't save your pick — it may be locked already." };
   }
 
+  revalidatePath("/pick");
   revalidatePath("/");
   return { success: true };
 }
