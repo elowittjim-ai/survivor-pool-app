@@ -55,7 +55,7 @@ export default async function AdminPage() {
     .select("current_week, is_complete, commissioner_message")
     .eq("id", 1)
     .single();
-  const currentWeek = currentWeek;
+  const currentWeek = seasonState?.current_week ?? 1;
 
   // RLS lets admins see current-week picks (unlike regular players, who only
   // see closed weeks) — that's what makes this live view possible.
