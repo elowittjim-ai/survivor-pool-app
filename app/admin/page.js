@@ -55,6 +55,14 @@ export default async function AdminPage() {
     .select("current_week, is_complete, commissioner_message")
     .eq("id", 1)
     .single();
+  const currentWeek = currentWeek;
+
+  // RLS lets admins see current-week picks (unlike regular players, who only
+  // see closed weeks) — that's what makes this live view possible.
+  const { data: currentWeekPicks } = await supabase
+    .from("picks")
+    .select("player_id, contestants(name)")
+    .eq("week", currentWeek);
 
   return (
     <div>
@@ -63,7 +71,7 @@ export default async function AdminPage() {
           <div className="sp-brand-mark">🛡️</div>
           <div>
             <div className="sp-display sp-brand-title">ADMIN</div>
-            <div className="sp-brand-sub">Week {seasonState?.current_week ?? 1}</div>
+            <div className="sp-brand-sub">Week {currentWeek}</div>
           </div>
         </div>
         <div className="sp-header-right">
@@ -82,9 +90,10 @@ export default async function AdminPage() {
           activeContestants={activeContestants || []}
           allContestants={allContestants || []}
           recentCorrections={recentCorrections || []}
-          currentWeek={seasonState?.current_week ?? 1}
+          currentWeek={currentWeek}
           isComplete={!!seasonState?.is_complete}
           commissionerMessage={seasonState?.commissioner_message}
+          currentWeekPicks={currentWeekPicks || []}
         />
       </main>
     </div>

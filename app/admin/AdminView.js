@@ -175,6 +175,42 @@ function PlayersCard({ approvedPlayers, currentUserId }) {
   );
 }
 
+function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek }) {
+  const pickByPlayer = new Map(currentWeekPicks.map((p) => [p.player_id, p.contestants?.name]));
+  const pickedCount = approvedPlayers.filter((p) => pickByPlayer.has(p.id)).length;
+
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">Week {currentWeek} picks so far</div>
+      <p className="sp-section-sub">
+        {pickedCount} of {approvedPlayers.length} players have picked.
+      </p>
+      {approvedPlayers.length === 0 ? (
+        <p className="sp-section-sub">No approved players yet.</p>
+      ) : (
+        approvedPlayers.map((p) => {
+          const pick = pickByPlayer.get(p.id);
+          return (
+            <div key={p.id} className="sp-row">
+              <span>{p.display_name}</span>
+              {pick ? (
+                <span>{pick}</span>
+              ) : (
+                <span
+                  className="sp-pill"
+                  style={{ background: "var(--sp-surface-2)", color: "var(--sp-text-muted)" }}
+                >
+                  Not picked yet
+                </span>
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 function CloseWeekCard({ currentWeek, activeContestants }) {
   const [staged, setStaged] = useState(new Set());
   const [state, formAction, pending] = useActionState(closeWeek, initialState);
@@ -422,6 +458,7 @@ export default function AdminView({
   currentWeek,
   isComplete,
   commissionerMessage,
+  currentWeekPicks,
 }) {
   return (
     <div>
@@ -437,6 +474,11 @@ export default function AdminView({
       )}
       <BulkApproveCard />
       <PlayersCard approvedPlayers={approvedPlayers} currentUserId={currentUserId} />
+      <CurrentPicksCard
+        approvedPlayers={approvedPlayers}
+        currentWeekPicks={currentWeekPicks}
+        currentWeek={currentWeek}
+      />
       <CloseWeekCard currentWeek={currentWeek} activeContestants={activeContestants} />
       <RosterCard />
       <CorrectionsCard
