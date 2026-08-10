@@ -62,6 +62,14 @@ export async function signup(prevState, formData) {
   }
 
   const supabase = await createClient();
+
+  const { data: taken } = await supabase.rpc("display_name_taken", { check_name: displayName });
+  if (taken) {
+    return {
+      error: `"${displayName}" is already taken by another player. Try a nickname or add a last initial, e.g. "${displayName} ${displayName[0].toUpperCase()}."`,
+    };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
