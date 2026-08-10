@@ -57,6 +57,7 @@ export default async function LoginPage() {
               padding: "10px 12px",
               margin: "10px 0 0",
               lineHeight: 1.4,
+              textDecoration: "underline",
             }}
           >
             When you pay, put your game name and email in the Venmo note — I need an
