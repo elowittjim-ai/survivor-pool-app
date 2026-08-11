@@ -56,7 +56,7 @@ export default async function HomePage() {
 
       <main className="sp-main">
         <div className="sp-hero">
-          <div className="sp-hero-mark">🏝️🔥</div>
+          <img src="/survivor-logo.png" alt="Survivor" className="sp-hero-logo" />
           <div className="sp-display sp-hero-title">Welcome back, {profile.display_name}</div>
           <p className="sp-hero-sub">Week {currentWeek} is underway — outwit, outplay, outlast.</p>
           <Link href="/pick" className="sp-btn sp-btn-primary" style={{ marginTop: 14 }}>

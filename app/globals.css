@@ -330,9 +330,11 @@ a {
   border: 1px solid var(--sp-border);
 }
 
-.sp-hero-mark {
-  font-size: 36px;
-  margin-bottom: 6px;
+.sp-hero-logo {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
 }
 
 .sp-hero-title {
