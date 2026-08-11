@@ -155,6 +155,58 @@ export async function addContestant(prevState, formData) {
   return { success: true };
 }
 
+// Assigns the alphabetical auto-pick to anyone approved who hasn't picked
+// yet for `week` (and isn't already eliminated from an earlier week).
+// `pool` is which contestants are eligible to be auto-picked from — lockPicks
+// only knows who's active so far, while closeWeek also folds in whoever's
+// just been eliminated that same week (mirrors the validated prototype, so a
+// straggler's auto-pick can still match this week's boot and count as "out").
+async function autoPickStragglers(supabase, week, pool) {
+  const { data: approvedPlayers } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("is_approved", true);
+
+  const { data: existingPicks } = await supabase
+    .from("picks")
+    .select("player_id, week, contestant_id")
+    .eq("week", week);
+  const pickedThisWeek = new Set((existingPicks || []).map((p) => p.player_id));
+
+  const { data: allPicks } = await supabase
+    .from("picks")
+    .select("player_id, week, contestant_id, contestants(status, eliminated_week)");
+
+  const usedByPlayer = new Map();
+  const alreadyOutPlayers = new Set();
+  for (const p of allPicks || []) {
+    if (!usedByPlayer.has(p.player_id)) usedByPlayer.set(p.player_id, new Set());
+    usedByPlayer.get(p.player_id).add(p.contestant_id);
+    const c = p.contestants;
+    if (p.week < week && c && c.status === "eliminated" && c.eliminated_week === p.week) {
+      alreadyOutPlayers.add(p.player_id);
+    }
+  }
+
+  const stragglerRows = [];
+  for (const player of approvedPlayers || []) {
+    if (pickedThisWeek.has(player.id) || alreadyOutPlayers.has(player.id)) continue;
+    const used = usedByPlayer.get(player.id) || new Set();
+    let eligible = pool.filter((c) => !used.has(c.id));
+    if (eligible.length === 0 && pool.length > 0) eligible = pool;
+    if (eligible.length === 0) continue;
+    const autoPick = [...eligible].sort((a, b) => a.name.localeCompare(b.name))[0];
+    stragglerRows.push({ player_id: player.id, week, contestant_id: autoPick.id });
+  }
+
+  if (stragglerRows.length === 0) return null;
+
+  const { error } = await supabase
+    .from("picks")
+    .upsert(stragglerRows, { onConflict: "player_id,week" });
+  return error;
+}
+
 export async function closeWeek(prevState, formData) {
   const supabase = await createClient();
   const user = await requireAdmin(supabase);
@@ -177,62 +229,17 @@ export async function closeWeek(prevState, formData) {
     if (elimError) return { error: "Couldn't record eliminations." };
   }
 
-  // Pool for auto-pick: anyone still active, plus anyone just eliminated this week
-  // (mirrors the validated prototype so a straggler's auto-pick can still match
-  // this week's boot and count as correctly "out").
+  // Normally a no-op by this point — stragglers are auto-picked when the
+  // week gets locked. This only catches players who slipped through if the
+  // admin closed the week without locking picks first.
   const { data: pool } = await supabase
     .from("contestants")
     .select("id, name")
     .or(`status.eq.active,eliminated_week.eq.${week}`)
     .order("name");
 
-  const { data: approvedPlayers } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("is_approved", true);
-
-  const { data: existingPicks } = await supabase
-    .from("picks")
-    .select("player_id, week, contestant_id")
-    .eq("week", week);
-  const pickedThisWeek = new Set((existingPicks || []).map((p) => p.player_id));
-
-  const { data: allPicks } = await supabase
-    .from("picks")
-    .select("player_id, week, contestant_id, contestants(status, eliminated_week)");
-
-  // A player who was already knocked out in an earlier week shouldn't get a
-  // fresh auto-pick here — once you're out, you're out. Only picks from
-  // weeks before this one count toward that (this week's own elimination,
-  // just recorded above, doesn't retroactively disqualify anyone from it).
-  const usedByPlayer = new Map();
-  const alreadyOutPlayers = new Set();
-  for (const p of allPicks || []) {
-    if (!usedByPlayer.has(p.player_id)) usedByPlayer.set(p.player_id, new Set());
-    usedByPlayer.get(p.player_id).add(p.contestant_id);
-    const c = p.contestants;
-    if (p.week < week && c && c.status === "eliminated" && c.eliminated_week === p.week) {
-      alreadyOutPlayers.add(p.player_id);
-    }
-  }
-
-  const stragglerRows = [];
-  for (const player of approvedPlayers || []) {
-    if (pickedThisWeek.has(player.id) || alreadyOutPlayers.has(player.id)) continue;
-    const used = usedByPlayer.get(player.id) || new Set();
-    let eligible = (pool || []).filter((c) => !used.has(c.id));
-    if (eligible.length === 0 && (pool || []).length > 0) eligible = pool;
-    if (eligible.length === 0) continue;
-    const autoPick = [...eligible].sort((a, b) => a.name.localeCompare(b.name))[0];
-    stragglerRows.push({ player_id: player.id, week, contestant_id: autoPick.id });
-  }
-
-  if (stragglerRows.length > 0) {
-    const { error: autoPickError } = await supabase
-      .from("picks")
-      .upsert(stragglerRows, { onConflict: "player_id,week" });
-    if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
-  }
+  const autoPickError = await autoPickStragglers(supabase, week, pool || []);
+  if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
 
   const { error: advanceError } = await supabase
     .from("season_state")
@@ -249,6 +256,22 @@ export async function closeWeek(prevState, formData) {
 export async function lockPicks(prevState, formData) {
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { data: seasonState } = await supabase
+    .from("season_state")
+    .select("current_week")
+    .eq("id", 1)
+    .single();
+  const week = seasonState?.current_week ?? 1;
+
+  const { data: pool } = await supabase
+    .from("contestants")
+    .select("id, name")
+    .eq("status", "active")
+    .order("name");
+
+  const autoPickError = await autoPickStragglers(supabase, week, pool || []);
+  if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
 
   const { error } = await supabase
     .from("season_state")

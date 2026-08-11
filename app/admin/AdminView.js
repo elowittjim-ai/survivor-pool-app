@@ -221,7 +221,7 @@ function LockPicksCard({ currentWeek, picksLocked }) {
       <p className="sp-section-sub">
         {picksLocked
           ? "Locked — nobody can submit or change a pick until you record this week's result and move to the next week."
-          : "Players can still change their pick. Lock it once the deadline passes (e.g. Monday morning) so nobody can sneak in a late change before the episode airs."}
+          : "Players can still change their pick. Lock it once the deadline passes (e.g. Monday morning) so nobody can sneak in a late change — anyone who hasn't picked yet gets the alphabetical auto-pick at the same time."}
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {picksLocked ? (
@@ -256,9 +256,9 @@ function CloseWeekCard({ currentWeek, activeContestants }) {
     <div className="sp-card">
       <div className="sp-section-title">Step 2: Record week {currentWeek} result</div>
       <p className="sp-section-sub">
-        After the episode airs — check anyone voted out, then close the week. Anyone who
-        hasn&apos;t picked yet gets the alphabetical auto-pick automatically, and next
-        week&apos;s picks open back up.
+        After the episode airs — check anyone voted out, then close the week to open up
+        next week&apos;s picks. (Anyone who somehow still hasn&apos;t picked gets the
+        alphabetical auto-pick here too, as a backup.)
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {activeContestants.length === 0 && (
