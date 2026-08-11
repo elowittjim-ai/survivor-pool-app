@@ -53,20 +53,29 @@ export default function SeasonGridTable({
   emptyContestantsMessage = "No contestants yet.",
   emptyPlayersMessage = "No approved players yet.",
 }) {
+  // contestantColumns is ordered active-then-eliminated (see buildGridData),
+  // so this is the one index boundary where the two groups meet.
+  function columnDivider(i) {
+    return contestantColumns[i].status === "eliminated" &&
+      contestantColumns[i - 1]?.status !== "eliminated"
+      ? { borderLeft: "2px solid var(--sp-border)" }
+      : undefined;
+  }
+
   function renderPlayerRow(p) {
     return (
       <tr key={p.id}>
         <td className="sp-sticky-name" style={p.outWeek !== null ? { color: "var(--sp-text-muted)" } : undefined}>
           {p.display_name}
         </td>
-        {contestantColumns.map((c) => {
+        {contestantColumns.map((c, i) => {
           const week = weekByPlayerContestant.get(`${p.id}:${c.id}`);
           if (week === undefined) {
-            return <td key={c.id} className="sp-cell-empty">—</td>;
+            return <td key={c.id} className="sp-cell-empty" style={columnDivider(i)}>—</td>;
           }
           const isOutHere = p.outWeek === week;
           return (
-            <td key={c.id} className={isOutHere ? "sp-cell-out" : "sp-cell-survived"}>
+            <td key={c.id} className={isOutHere ? "sp-cell-out" : "sp-cell-survived"} style={columnDivider(i)}>
               W{week}
             </td>
           );
@@ -80,8 +89,16 @@ export default function SeasonGridTable({
       <thead>
         <tr>
           <th>Player</th>
-          {contestantColumns.map((c) => (
-            <th key={c.id} style={c.status === "eliminated" ? { color: "var(--sp-text-muted)" } : undefined}>
+          {contestantColumns.map((c, i) => (
+            <th
+              key={c.id}
+              style={{
+                ...(c.status === "eliminated"
+                  ? { color: "var(--sp-text-muted)", background: "var(--sp-danger-soft)" }
+                  : undefined),
+                ...columnDivider(i),
+              }}
+            >
               {c.name}
               <div className="sp-c-sub" style={{ fontWeight: 400 }}>
                 {c.tribe || "—"}
