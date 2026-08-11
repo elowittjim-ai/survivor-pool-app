@@ -14,6 +14,7 @@ import {
   fixContestantStatus,
   updateCommissionerMessage,
   lockPicks,
+  updateContestantTribe,
 } from "./actions";
 
 const initialState = { error: null, success: false };
@@ -366,8 +367,10 @@ function FixPickCard({ approvedPlayers, allContestants, currentWeek }) {
 }
 
 function FixContestantRow({ contestant }) {
-  const [state, formAction, pending] = useActionState(fixContestantStatus, initialState);
+  const [statusState, statusAction, statusPending] = useActionState(fixContestantStatus, initialState);
+  const [tribeState, tribeAction, tribePending] = useActionState(updateContestantTribe, initialState);
   const [week, setWeek] = useState(contestant.eliminated_week || "");
+  const [tribe, setTribe] = useState(contestant.tribe || "");
 
   return (
     <div className="sp-row" style={{ flexWrap: "wrap" }}>
@@ -378,7 +381,26 @@ function FixContestantRow({ contestant }) {
         </span>
       </span>
       <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <form action={formAction} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <form action={tribeAction} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input type="hidden" name="contestantId" value={contestant.id} />
+          <input
+            className="sp-input"
+            style={{ width: 90, padding: "6px 8px" }}
+            type="text"
+            name="tribe"
+            value={tribe}
+            onChange={(e) => setTribe(e.target.value)}
+            placeholder="Tribe"
+          />
+          <button
+            type="submit"
+            className="sp-btn sp-btn-secondary"
+            disabled={tribePending || tribe === (contestant.tribe || "")}
+          >
+            {tribePending ? "…" : "Save tribe"}
+          </button>
+        </form>
+        <form action={statusAction} style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input type="hidden" name="contestantId" value={contestant.id} />
           <input type="hidden" name="statusAction" value="eliminate" />
           <input
@@ -391,22 +413,24 @@ function FixContestantRow({ contestant }) {
             onChange={(e) => setWeek(e.target.value)}
             placeholder="wk"
           />
-          <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending || !week}>
-            {pending ? "…" : "Set eliminated"}
+          <button type="submit" className="sp-btn sp-btn-secondary" disabled={statusPending || !week}>
+            {statusPending ? "…" : "Set eliminated"}
           </button>
         </form>
         {contestant.status === "eliminated" && (
-          <form action={formAction}>
+          <form action={statusAction}>
             <input type="hidden" name="contestantId" value={contestant.id} />
             <input type="hidden" name="statusAction" value="revert" />
-            <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
-              {pending ? "…" : "Revert to active"}
+            <button type="submit" className="sp-btn sp-btn-secondary" disabled={statusPending}>
+              {statusPending ? "…" : "Revert to active"}
             </button>
           </form>
         )}
       </span>
-      {state?.error && (
-        <div className="sp-banner sp-banner-error" style={{ marginTop: 8, width: "100%" }}>{state.error}</div>
+      {(statusState?.error || tribeState?.error) && (
+        <div className="sp-banner sp-banner-error" style={{ marginTop: 8, width: "100%" }}>
+          {statusState?.error || tribeState?.error}
+        </div>
       )}
     </div>
   );

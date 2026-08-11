@@ -2,6 +2,8 @@
 // screen — same player-rows/contestant-columns layout as the legacy
 // spreadsheet in both places, not two copies that can drift apart.
 
+import { tribeColor } from "./tribeColor";
+
 export function buildGridData(players, allContestants, picks) {
   const activeContestants = (allContestants || [])
     .filter((c) => c.status === "active")
@@ -100,7 +102,14 @@ export default function SeasonGridTable({
               }}
             >
               {c.name}
-              <div className="sp-c-sub" style={{ fontWeight: 400 }}>
+              <div
+                className="sp-c-sub"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: c.status === "eliminated" ? undefined : tribeColor(c.tribe),
+                }}
+              >
                 {c.tribe || "—"}
                 {c.status === "eliminated" ? " · out" : ""}
               </div>

@@ -41,7 +41,7 @@ export default async function AdminPage() {
 
   const { data: allContestants } = await supabase
     .from("contestants")
-    .select("id, name, status, eliminated_week")
+    .select("id, name, status, eliminated_week, tribe")
     .order("name");
 
   const { data: recentCorrections } = await supabase

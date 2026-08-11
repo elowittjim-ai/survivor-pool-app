@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useEffect } from "react";
 import { submitPick } from "./actions";
+import { tribeColor } from "./tribeColor";
 
 function initials(name) {
   return name.slice(0, 2).toUpperCase();
@@ -111,7 +112,12 @@ export default function PickView({
               <p className="sp-c-name" style={selected ? { color: "var(--sp-ember)" } : undefined}>
                 {c.name}
               </p>
-              <p className="sp-c-sub">{isUsed ? "Already picked" : (c.tribe || "—") + " tribe"}</p>
+              <p
+                className="sp-c-sub"
+                style={isUsed ? undefined : { fontSize: 13, fontWeight: 700, color: tribeColor(c.tribe) }}
+              >
+                {isUsed ? "Already picked" : (c.tribe || "—") + " tribe"}
+              </p>
             </div>
           );
         })}

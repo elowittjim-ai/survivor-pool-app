@@ -372,6 +372,41 @@ export async function fixContestantStatus(prevState, formData) {
   return { success: true };
 }
 
+export async function updateContestantTribe(prevState, formData) {
+  const contestantId = String(formData.get("contestantId") || "");
+  const tribe = String(formData.get("tribe") || "").trim();
+  if (!contestantId) return { error: "Missing contestant." };
+
+  const supabase = await createClient();
+  const admin = await requireAdmin(supabase);
+  if (!admin) return { error: "Admins only." };
+
+  const { data: contestant } = await supabase
+    .from("contestants")
+    .select("name, tribe")
+    .eq("id", contestantId)
+    .single();
+
+  const { error } = await supabase
+    .from("contestants")
+    .update({ tribe: tribe || null })
+    .eq("id", contestantId);
+  if (error) return { error: "Couldn't update that contestant's tribe." };
+
+  await logCorrection(
+    supabase,
+    admin.id,
+    `Changed ${contestant?.name || "a contestant"}'s tribe from ${contestant?.tribe || "—"} to ${tribe || "—"}.`
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/pick");
+  revalidatePath("/grid");
+  revalidatePath("/results");
+  return { success: true };
+}
+
 export async function updateCommissionerMessage(prevState, formData) {
   const message = String(formData.get("message") || "").trim();
 
