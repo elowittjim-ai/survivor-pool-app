@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 import TabNav from "./TabNav";
+import AskQuestionForm from "./AskQuestionForm";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -83,6 +84,8 @@ export default async function HomePage() {
             pick so you&apos;re never skipped. Last player(s) standing split the pot.
           </p>
         </div>
+
+        <AskQuestionForm />
       </main>
     </div>
   );

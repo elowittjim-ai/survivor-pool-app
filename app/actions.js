@@ -56,3 +56,25 @@ export async function submitPick(prevState, formData) {
   revalidatePath("/");
   return { success: true };
 }
+
+export async function askQuestion(prevState, formData) {
+  const question = String(formData.get("question") || "").trim();
+  if (!question) {
+    return { error: "Type your question first." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "You need to be logged in." };
+  }
+
+  const { error } = await supabase.from("questions").insert({ player_id: user.id, question });
+  if (error) {
+    return { error: "Couldn't send your question — try again." };
+  }
+
+  return { success: true };
+}

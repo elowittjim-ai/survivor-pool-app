@@ -15,6 +15,7 @@ import {
   updateCommissionerMessage,
   lockPicks,
   updateContestantTribe,
+  markQuestionAnswered,
 } from "./actions";
 
 const initialState = { error: null, success: false };
@@ -62,6 +63,49 @@ function ApproveRow({ player }) {
           {pending ? "Approving…" : "Approve"}
         </button>
       </form>
+    </div>
+  );
+}
+
+function QuestionRow({ question }) {
+  const [state, formAction, pending] = useActionState(markQuestionAnswered, initialState);
+  const isAnswered = question.answered || state.success;
+
+  return (
+    <div className="sp-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+        <strong>{question.profiles?.display_name || "Unknown player"}</strong>
+        <span className="sp-c-sub">{new Date(question.created_at).toLocaleDateString()}</span>
+      </div>
+      <p className="sp-section-sub" style={{ margin: 0 }}>{question.question}</p>
+      {isAnswered ? (
+        <span className="sp-c-sub">✓ Answered</span>
+      ) : (
+        <form action={formAction}>
+          <input type="hidden" name="questionId" value={question.id} />
+          <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
+            {pending ? "…" : "Mark answered"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function QuestionsCard({ questions }) {
+  const unansweredCount = questions.filter((q) => !q.answered).length;
+
+  if (questions.length === 0) return null;
+
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">✉️ Player questions</div>
+      <p className="sp-section-sub">
+        {unansweredCount === 0 ? "No open questions." : `${unansweredCount} waiting on a reply.`}
+      </p>
+      {questions.map((q) => (
+        <QuestionRow key={q.id} question={q} />
+      ))}
     </div>
   );
 }
@@ -513,10 +557,12 @@ export default function AdminView({
   commissionerMessage,
   currentWeekPicks,
   picksLocked,
+  questions,
 }) {
   return (
     <div>
       <CommissionerMessageCard currentMessage={commissionerMessage} />
+      <QuestionsCard questions={questions} />
       {pendingPlayers.length > 0 && (
         <div className="sp-card">
           <div className="sp-section-title">Pending approvals</div>

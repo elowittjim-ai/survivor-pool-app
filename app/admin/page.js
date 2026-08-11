@@ -64,6 +64,12 @@ export default async function AdminPage() {
     .select("player_id, contestants(name)")
     .eq("week", currentWeek);
 
+  const { data: questions } = await supabase
+    .from("questions")
+    .select("id, question, answered, created_at, profiles(display_name)")
+    .order("answered", { ascending: true })
+    .order("created_at", { ascending: false });
+
   return (
     <div>
       <div className="sp-header">
@@ -95,6 +101,7 @@ export default async function AdminPage() {
           commissionerMessage={seasonState?.commissioner_message}
           currentWeekPicks={currentWeekPicks || []}
           picksLocked={!!seasonState?.picks_locked}
+          questions={questions || []}
         />
       </main>
     </div>

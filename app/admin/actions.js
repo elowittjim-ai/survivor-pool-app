@@ -407,6 +407,20 @@ export async function updateContestantTribe(prevState, formData) {
   return { success: true };
 }
 
+export async function markQuestionAnswered(prevState, formData) {
+  const questionId = String(formData.get("questionId") || "");
+  if (!questionId) return { error: "Missing question." };
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase.from("questions").update({ answered: true }).eq("id", questionId);
+  if (error) return { error: "Couldn't update that question." };
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 export async function updateCommissionerMessage(prevState, formData) {
   const message = String(formData.get("message") || "").trim();
 
