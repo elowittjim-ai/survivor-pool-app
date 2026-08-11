@@ -13,6 +13,7 @@ import {
   fixPick,
   fixContestantStatus,
   updateCommissionerMessage,
+  lockPicks,
 } from "./actions";
 
 const initialState = { error: null, success: false };
@@ -211,6 +212,33 @@ function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek }) {
   );
 }
 
+function LockPicksCard({ currentWeek, picksLocked }) {
+  const [state, formAction, pending] = useActionState(lockPicks, initialState);
+
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">Step 1: Lock week {currentWeek} picks</div>
+      <p className="sp-section-sub">
+        {picksLocked
+          ? "Locked — nobody can submit or change a pick until you record this week's result and move to the next week."
+          : "Players can still change their pick. Lock it once the deadline passes (e.g. Monday morning) so nobody can sneak in a late change before the episode airs."}
+      </p>
+      {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
+      {picksLocked ? (
+        <div className="sp-banner" style={{ margin: 0, background: "var(--sp-teal-soft)", color: "#9fcfc0" }}>
+          🔒 Picks are locked
+        </div>
+      ) : (
+        <form action={formAction}>
+          <button type="submit" className="sp-btn sp-btn-primary sp-btn-block" disabled={pending}>
+            {pending ? "Locking…" : `🔒 Lock week ${currentWeek} picks`}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function CloseWeekCard({ currentWeek, activeContestants }) {
   const [staged, setStaged] = useState(new Set());
   const [state, formAction, pending] = useActionState(closeWeek, initialState);
@@ -226,10 +254,11 @@ function CloseWeekCard({ currentWeek, activeContestants }) {
 
   return (
     <div className="sp-card">
-      <div className="sp-section-title">Record week {currentWeek} result</div>
+      <div className="sp-section-title">Step 2: Record week {currentWeek} result</div>
       <p className="sp-section-sub">
-        Check anyone voted out this episode, then close the week. Anyone who hasn&apos;t
-        picked yet gets the alphabetical auto-pick automatically.
+        After the episode airs — check anyone voted out, then close the week. Anyone who
+        hasn&apos;t picked yet gets the alphabetical auto-pick automatically, and next
+        week&apos;s picks open back up.
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {activeContestants.length === 0 && (
@@ -459,6 +488,7 @@ export default function AdminView({
   isComplete,
   commissionerMessage,
   currentWeekPicks,
+  picksLocked,
 }) {
   return (
     <div>
@@ -479,6 +509,7 @@ export default function AdminView({
         currentWeekPicks={currentWeekPicks}
         currentWeek={currentWeek}
       />
+      <LockPicksCard currentWeek={currentWeek} picksLocked={picksLocked} />
       <CloseWeekCard currentWeek={currentWeek} activeContestants={activeContestants} />
       <RosterCard />
       <CorrectionsCard

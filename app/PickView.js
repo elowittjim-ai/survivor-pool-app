@@ -9,10 +9,18 @@ function initials(name) {
 
 const initialState = { error: null, success: false };
 
-export default function PickView({ week, contestants, usedIds, clearedBoard, currentPickId, currentPickName }) {
+export default function PickView({
+  week,
+  contestants,
+  usedIds,
+  clearedBoard,
+  currentPickId,
+  currentPickName,
+  picksLocked,
+}) {
   const [selectedId, setSelectedId] = useState(currentPickId || null);
-  const [lockedId, setLockedId] = useState(currentPickId || null);
-  const [lockedName, setLockedName] = useState(currentPickName || null);
+  const [savedId, setSavedId] = useState(currentPickId || null);
+  const [savedName, setSavedName] = useState(currentPickName || null);
   const [state, formAction, pending] = useActionState(submitPick, initialState);
 
   // useActionState hands back a fresh object on every dispatch, so this
@@ -20,15 +28,37 @@ export default function PickView({ week, contestants, usedIds, clearedBoard, cur
   // the first (e.g. changing an already-locked pick again).
   useEffect(() => {
     if (state.success) {
-      setLockedId(selectedId);
-      setLockedName(contestants.find((c) => c.id === selectedId)?.name ?? null);
+      setSavedId(selectedId);
+      setSavedName(contestants.find((c) => c.id === selectedId)?.name ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const usedSet = new Set(usedIds);
   const selectedContestant = contestants.find((c) => c.id === selectedId) || null;
-  const hasUnsavedChange = selectedId !== lockedId;
+
+  if (picksLocked) {
+    return (
+      <div className="sp-card">
+        <div className="sp-section-title">Week {week} pick</div>
+        {savedId ? (
+          <div
+            className="sp-banner"
+            style={{ margin: 0, background: "var(--sp-teal-soft)", color: "#9fcfc0" }}
+          >
+            🔒 Picks are locked for this week. Your pick: <strong>{savedName}</strong>.
+          </div>
+        ) : (
+          <div className="sp-banner sp-banner-error" style={{ margin: 0 }}>
+            🔒 Picks are locked and you didn&apos;t submit one in time — you&apos;ll get an
+            automatic pick when the admin records this week&apos;s result.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const usedSet = new Set(usedIds);
+  const hasUnsavedChange = selectedId !== savedId;
 
   return (
     <div className="sp-card">
@@ -37,12 +67,12 @@ export default function PickView({ week, contestants, usedIds, clearedBoard, cur
         Who do you think survives this episode? Tap to select, then submit.
       </p>
 
-      {lockedId && !hasUnsavedChange && (
+      {savedId && !hasUnsavedChange && (
         <div
           className="sp-banner"
           style={{ margin: "0 0 14px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}
         >
-          🔒 Locked in: <strong>{lockedName}</strong>. You can change your pick anytime
+          🔒 Locked in: <strong>{savedName}</strong>. You can change your pick anytime
           before the admin closes the week.
         </div>
       )}

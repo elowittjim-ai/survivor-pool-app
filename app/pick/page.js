@@ -27,7 +27,7 @@ export default async function PickPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete")
+    .select("current_week, is_complete, picks_locked")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
@@ -95,6 +95,7 @@ export default async function PickPage() {
             clearedBoard={clearedBoard}
             currentPickId={currentPick?.contestant_id || null}
             currentPickName={currentPick?.contestants?.name || null}
+            picksLocked={!!seasonState?.picks_locked}
           />
         ) : (
           <div className="sp-card">

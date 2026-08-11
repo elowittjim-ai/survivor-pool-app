@@ -236,12 +236,29 @@ export async function closeWeek(prevState, formData) {
 
   const { error: advanceError } = await supabase
     .from("season_state")
-    .update({ current_week: week + 1 })
+    .update({ current_week: week + 1, picks_locked: false })
     .eq("id", 1);
   if (advanceError) return { error: "Couldn't advance the week." };
 
   revalidatePath("/admin");
+  revalidatePath("/pick");
   revalidatePath("/");
+  return { success: true };
+}
+
+export async function lockPicks(prevState, formData) {
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase
+    .from("season_state")
+    .update({ picks_locked: true })
+    .eq("id", 1);
+
+  if (error) return { error: "Couldn't lock picks." };
+
+  revalidatePath("/admin");
+  revalidatePath("/pick");
   return { success: true };
 }
 

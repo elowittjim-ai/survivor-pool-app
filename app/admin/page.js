@@ -52,7 +52,7 @@ export default async function AdminPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete, commissioner_message")
+    .select("current_week, is_complete, commissioner_message, picks_locked")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
@@ -94,6 +94,7 @@ export default async function AdminPage() {
           isComplete={!!seasonState?.is_complete}
           commissionerMessage={seasonState?.commissioner_message}
           currentWeekPicks={currentWeekPicks || []}
+          picksLocked={!!seasonState?.picks_locked}
         />
       </main>
     </div>
