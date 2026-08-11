@@ -75,53 +75,61 @@ export default function SeasonGridTable({
     );
   }
 
+  function renderHeader() {
+    return (
+      <thead>
+        <tr>
+          <th>Player</th>
+          {contestantColumns.map((c) => (
+            <th key={c.id} style={c.status === "eliminated" ? { color: "var(--sp-text-muted)" } : undefined}>
+              {c.name}
+              <div className="sp-c-sub" style={{ fontWeight: 400 }}>
+                {c.tribe || "—"}
+                {c.status === "eliminated" ? " · out" : ""}
+              </div>
+              <div className="sp-c-sub" style={{ fontWeight: 400 }}>
+                picked {pickCountByContestant.get(c.id) || 0}
+              </div>
+            </th>
+          ))}
+        </tr>
+      </thead>
+    );
+  }
+
+  function renderGrid(rows, emptyMessage) {
+    if (rows.length === 0) {
+      return <p className="sp-section-sub">{emptyMessage}</p>;
+    }
+    return (
+      <div className="sp-table-wrap">
+        <table className="sp-grid-table">
+          {renderHeader()}
+          <tbody>{rows.map(renderPlayerRow)}</tbody>
+        </table>
+      </div>
+    );
+  }
+
   if (contestantColumns.length === 0) {
     return <p className="sp-section-sub">{emptyContestantsMessage}</p>;
   }
 
+  if (aliveRows.length === 0 && outRows.length === 0) {
+    return <p className="sp-section-sub">{emptyPlayersMessage}</p>;
+  }
+
   return (
     <>
-      <div className="sp-table-wrap">
-        <table className="sp-grid-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              {contestantColumns.map((c) => (
-                <th key={c.id} style={c.status === "eliminated" ? { color: "var(--sp-text-muted)" } : undefined}>
-                  {c.name}
-                  <div className="sp-c-sub" style={{ fontWeight: 400 }}>
-                    {c.tribe || "—"}
-                    {c.status === "eliminated" ? " · out" : ""}
-                  </div>
-                  <div className="sp-c-sub" style={{ fontWeight: 400 }}>
-                    picked {pickCountByContestant.get(c.id) || 0}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {aliveRows.map(renderPlayerRow)}
-            {outRows.length > 0 && (
-              <tr>
-                <td
-                  className="sp-sticky-name"
-                  colSpan={contestantColumns.length + 1}
-                  style={{ color: "var(--sp-text-muted)", fontSize: 11, background: "var(--sp-bg)" }}
-                >
-                  Eliminated
-                </td>
-              </tr>
-            )}
-            {outRows.map(renderPlayerRow)}
-          </tbody>
-        </table>
+      <div className="sp-c-sub" style={{ fontWeight: 600, color: "var(--sp-text)", marginBottom: 6 }}>
+        Still in it ({aliveRows.length})
       </div>
-      {aliveRows.length === 0 && outRows.length === 0 && (
-        <p className="sp-section-sub" style={{ marginTop: 10 }}>
-          {emptyPlayersMessage}
-        </p>
-      )}
+      {renderGrid(aliveRows, "Nobody left — everyone's been eliminated.")}
+
+      <div className="sp-c-sub" style={{ fontWeight: 600, color: "var(--sp-text)", margin: "20px 0 6px" }}>
+        Eliminated ({outRows.length})
+      </div>
+      {renderGrid(outRows, "Nobody eliminated yet.")}
     </>
   );
 }
