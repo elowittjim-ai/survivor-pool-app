@@ -259,6 +259,7 @@ function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek }) {
 
 function LockPicksCard({ currentWeek, picksLocked }) {
   const [state, formAction, pending] = useActionState(lockPicks, initialState);
+  const [skipAutoPick, setSkipAutoPick] = useState(false);
 
   return (
     <div className="sp-card">
@@ -275,6 +276,16 @@ function LockPicksCard({ currentWeek, picksLocked }) {
         </div>
       ) : (
         <form action={formAction}>
+          <label className="sp-row" style={{ cursor: "pointer", border: "none", padding: "0 0 10px" }}>
+            <span className="sp-c-sub">No picks this week (e.g. week 1) — skip auto-pick</span>
+            <input
+              type="checkbox"
+              name="skipAutoPick"
+              value="true"
+              checked={skipAutoPick}
+              onChange={(e) => setSkipAutoPick(e.target.checked)}
+            />
+          </label>
           <button type="submit" className="sp-btn sp-btn-primary sp-btn-block" disabled={pending}>
             {pending ? "Locking…" : `🔒 Lock week ${currentWeek} picks`}
           </button>
@@ -286,6 +297,7 @@ function LockPicksCard({ currentWeek, picksLocked }) {
 
 function CloseWeekCard({ currentWeek, activeContestants }) {
   const [staged, setStaged] = useState(new Set());
+  const [skipAutoPick, setSkipAutoPick] = useState(false);
   const [state, formAction, pending] = useActionState(closeWeek, initialState);
 
   function toggle(id) {
@@ -317,10 +329,19 @@ function CloseWeekCard({ currentWeek, activeContestants }) {
           <input type="checkbox" checked={staged.has(c.id)} onChange={() => toggle(c.id)} />
         </label>
       ))}
+      <label className="sp-row" style={{ cursor: "pointer", border: "none", padding: "9px 0 0" }}>
+        <span className="sp-c-sub">No picks this week (e.g. week 1) — skip auto-pick</span>
+        <input
+          type="checkbox"
+          checked={skipAutoPick}
+          onChange={(e) => setSkipAutoPick(e.target.checked)}
+        />
+      </label>
       <form action={formAction} style={{ marginTop: 14 }}>
         {[...staged].map((id) => (
           <input key={id} type="hidden" name="eliminate" value={id} />
         ))}
+        {skipAutoPick && <input type="hidden" name="skipAutoPick" value="true" />}
         <button
           type="submit"
           className="sp-btn sp-btn-danger sp-btn-block"

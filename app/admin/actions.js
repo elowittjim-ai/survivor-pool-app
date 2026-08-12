@@ -213,6 +213,7 @@ export async function closeWeek(prevState, formData) {
   if (!user) return { error: "Admins only." };
 
   const eliminatedIds = formData.getAll("eliminate").map(String);
+  const skipAutoPick = formData.get("skipAutoPick") === "true";
 
   const { data: seasonState } = await supabase
     .from("season_state")
@@ -231,15 +232,19 @@ export async function closeWeek(prevState, formData) {
 
   // Normally a no-op by this point — stragglers are auto-picked when the
   // week gets locked. This only catches players who slipped through if the
-  // admin closed the week without locking picks first.
-  const { data: pool } = await supabase
-    .from("contestants")
-    .select("id, name")
-    .or(`status.eq.active,eliminated_week.eq.${week}`)
-    .order("name");
+  // admin closed the week without locking picks first. skipAutoPick (bye
+  // weeks like week 1, where nobody picks at all) turns this off entirely,
+  // since otherwise everyone with no pick would get one invented for them.
+  if (!skipAutoPick) {
+    const { data: pool } = await supabase
+      .from("contestants")
+      .select("id, name")
+      .or(`status.eq.active,eliminated_week.eq.${week}`)
+      .order("name");
 
-  const autoPickError = await autoPickStragglers(supabase, week, pool || []);
-  if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
+    const autoPickError = await autoPickStragglers(supabase, week, pool || []);
+    if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
+  }
 
   const { error: advanceError } = await supabase
     .from("season_state")
@@ -257,6 +262,8 @@ export async function lockPicks(prevState, formData) {
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };
 
+  const skipAutoPick = formData.get("skipAutoPick") === "true";
+
   const { data: seasonState } = await supabase
     .from("season_state")
     .select("current_week")
@@ -264,14 +271,16 @@ export async function lockPicks(prevState, formData) {
     .single();
   const week = seasonState?.current_week ?? 1;
 
-  const { data: pool } = await supabase
-    .from("contestants")
-    .select("id, name")
-    .eq("status", "active")
-    .order("name");
+  if (!skipAutoPick) {
+    const { data: pool } = await supabase
+      .from("contestants")
+      .select("id, name")
+      .eq("status", "active")
+      .order("name");
 
-  const autoPickError = await autoPickStragglers(supabase, week, pool || []);
-  if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
+    const autoPickError = await autoPickStragglers(supabase, week, pool || []);
+    if (autoPickError) return { error: "Couldn't auto-pick for stragglers." };
+  }
 
   const { error } = await supabase
     .from("season_state")
