@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 import TabNav from "./TabNav";
 import AskQuestionForm from "./AskQuestionForm";
+import RulesCard from "./RulesCard";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -74,16 +75,7 @@ export default async function HomePage() {
           </div>
         )}
 
-        <div className="sp-card">
-          <div className="sp-section-title">How it works</div>
-          <p className="sp-section-sub">
-            Every week, pick one contestant you think survives the episode. You can&apos;t pick
-            the same contestant twice — unless you&apos;ve used everyone at least once, in which
-            case the board clears and everyone&apos;s eligible again. If your pick gets voted
-            out, you&apos;re out for the season. Miss the deadline and you get an automatic
-            pick so you&apos;re never skipped. Last player(s) standing split the pot.
-          </p>
-        </div>
+        <RulesCard />
 
         <AskQuestionForm />
       </main>
