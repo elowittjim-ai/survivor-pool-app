@@ -62,7 +62,8 @@ export default function PickView({
   const hasUnsavedChange = selectedId !== savedId;
 
   return (
-    <div className="sp-card">
+    <>
+    <div className="sp-card" style={{ paddingBottom: 90 }}>
       <div className="sp-section-title">Week {week} pick</div>
       <p className="sp-section-sub">
         Who do you think survives this episode? Tap to select, then submit.
@@ -123,7 +124,10 @@ export default function PickView({
         })}
       </div>
 
-      <form action={formAction} style={{ marginTop: 14 }}>
+    </div>
+
+    <div className="sp-sticky-footer">
+      <form action={formAction}>
         <input type="hidden" name="contestantId" value={selectedId || ""} />
         <button
           type="submit"
@@ -142,5 +146,6 @@ export default function PickView({
         </button>
       </form>
     </div>
+    </>
   );
 }
