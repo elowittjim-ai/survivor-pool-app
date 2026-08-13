@@ -531,16 +531,18 @@ function CorrectionsCard({ approvedPlayers, allContestants, recentCorrections, c
   );
 }
 
-function PrizePoolCard({ currentAmount, buyInAmount, approvedCount }) {
+function PrizePoolCard({ currentAmount, buyInAmount, adminFeeAmount, approvedCount }) {
   const [state, formAction, pending] = useActionState(updateTotalPrizePool, initialState);
-  const autoAmount = Number(buyInAmount || 0) * approvedCount;
+  const netPerPlayer = Number(buyInAmount || 0) - Number(adminFeeAmount || 0);
+  const autoAmount = netPerPlayer * approvedCount;
 
   return (
     <div className="sp-card">
       <div className="sp-section-title">💰 Total prize pool</div>
       <p className="sp-section-sub">
-        Leave blank to auto-calculate as ${buyInAmount} × {approvedCount} approved players (${autoAmount.toLocaleString()}).
-        Set an exact amount here if the real total you collected ends up different.
+        Leave blank to auto-calculate as ${netPerPlayer} × {approvedCount} approved players
+        (${autoAmount.toLocaleString()}) — that&apos;s the ${buyInAmount} buy-in minus the ${adminFeeAmount}{" "}
+        admin fee. Set an exact amount here if the real total you collected ends up different.
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {state?.success && (
@@ -618,6 +620,7 @@ export default function AdminView({
   questions,
   totalPrizePool,
   buyInAmount,
+  adminFeeAmount,
 }) {
   return (
     <div>
@@ -651,6 +654,7 @@ export default function AdminView({
       <PrizePoolCard
         currentAmount={totalPrizePool}
         buyInAmount={buyInAmount}
+        adminFeeAmount={adminFeeAmount}
         approvedCount={approvedPlayers.length}
       />
       <FinaleCard activeContestants={activeContestants} isComplete={isComplete} />

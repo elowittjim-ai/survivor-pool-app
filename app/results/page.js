@@ -21,7 +21,7 @@ export default async function ResultsPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete, season_winner_contestant_id, buy_in_amount, total_prize_pool")
+    .select("current_week, is_complete, season_winner_contestant_id, buy_in_amount, total_prize_pool, admin_fee_amount")
     .eq("id", 1)
     .single();
 
@@ -95,10 +95,11 @@ export default async function ResultsPage() {
     picksByPlayer.get(pick.player_id).push(pick);
   }
 
+  const netPerPlayer = Number(seasonState.buy_in_amount || 0) - Number(seasonState.admin_fee_amount || 0);
   const potAmount =
     seasonState.total_prize_pool != null
       ? Number(seasonState.total_prize_pool)
-      : (players?.length || 0) * Number(seasonState.buy_in_amount || 0);
+      : (players?.length || 0) * netPerPlayer;
 
   const survivors = [];
   const poolWinners = [];
@@ -179,7 +180,7 @@ export default async function ResultsPage() {
           <p className="sp-notice" style={{ marginTop: 14 }}>
             {seasonState.total_prize_pool != null
               ? `Total pot: $${potAmount.toLocaleString()}, set by the commissioner.`
-              : `Pot is $${seasonState.buy_in_amount} × ${players?.length || 0} approved players.`}
+              : `Pot is $${netPerPlayer} × ${players?.length || 0} approved players ($${seasonState.buy_in_amount} buy-in minus a $${seasonState.admin_fee_amount} admin fee).`}
           </p>
         </div>
 
