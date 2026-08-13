@@ -16,6 +16,7 @@ import {
   lockPicks,
   updateContestantTribe,
   markQuestionAnswered,
+  updateTotalPrizePool,
 } from "./actions";
 
 const initialState = { error: null, success: false };
@@ -530,6 +531,42 @@ function CorrectionsCard({ approvedPlayers, allContestants, recentCorrections, c
   );
 }
 
+function PrizePoolCard({ currentAmount, buyInAmount, approvedCount }) {
+  const [state, formAction, pending] = useActionState(updateTotalPrizePool, initialState);
+  const autoAmount = Number(buyInAmount || 0) * approvedCount;
+
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">💰 Total prize pool</div>
+      <p className="sp-section-sub">
+        Leave blank to auto-calculate as ${buyInAmount} × {approvedCount} approved players (${autoAmount.toLocaleString()}).
+        Set an exact amount here if the real total you collected ends up different.
+      </p>
+      {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
+      {state?.success && (
+        <div className="sp-banner" style={{ margin: "0 0 10px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}>
+          Saved.
+        </div>
+      )}
+      <form action={formAction} className="sp-form" style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+        <input
+          className="sp-input"
+          style={{ flex: 1, minWidth: 140 }}
+          name="amount"
+          type="number"
+          min="0"
+          step="0.01"
+          defaultValue={currentAmount ?? ""}
+          placeholder={`e.g. ${autoAmount}`}
+        />
+        <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
+          {pending ? "Saving…" : "Save"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function FinaleCard({ activeContestants, isComplete }) {
   const [state, formAction, pending] = useActionState(declareWinner, initialState);
   return (
@@ -579,6 +616,8 @@ export default function AdminView({
   currentWeekPicks,
   picksLocked,
   questions,
+  totalPrizePool,
+  buyInAmount,
 }) {
   return (
     <div>
@@ -608,6 +647,11 @@ export default function AdminView({
         allContestants={allContestants}
         recentCorrections={recentCorrections}
         currentWeek={currentWeek}
+      />
+      <PrizePoolCard
+        currentAmount={totalPrizePool}
+        buyInAmount={buyInAmount}
+        approvedCount={approvedPlayers.length}
       />
       <FinaleCard activeContestants={activeContestants} isComplete={isComplete} />
     </div>

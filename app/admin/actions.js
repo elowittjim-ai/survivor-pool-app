@@ -381,6 +381,27 @@ export async function fixContestantStatus(prevState, formData) {
   return { success: true };
 }
 
+export async function updateTotalPrizePool(prevState, formData) {
+  const raw = String(formData.get("amount") || "").trim();
+  const amount = raw === "" ? null : Number(raw);
+  if (raw !== "" && (Number.isNaN(amount) || amount < 0)) {
+    return { error: "Enter a valid dollar amount." };
+  }
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase
+    .from("season_state")
+    .update({ total_prize_pool: amount })
+    .eq("id", 1);
+  if (error) return { error: "Couldn't save that." };
+
+  revalidatePath("/admin");
+  revalidatePath("/results");
+  return { success: true };
+}
+
 export async function updateContestantTribe(prevState, formData) {
   const contestantId = String(formData.get("contestantId") || "");
   const tribe = String(formData.get("tribe") || "").trim();
