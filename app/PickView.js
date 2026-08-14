@@ -37,6 +37,21 @@ export default function PickView({
 
   const selectedContestant = contestants.find((c) => c.id === selectedId) || null;
 
+  if (week === 1) {
+    return (
+      <div className="sp-card">
+        <div className="sp-section-title">Week 1</div>
+        <div
+          className="sp-banner"
+          style={{ margin: 0, background: "var(--sp-gold-soft)", color: "#e9c77a" }}
+        >
+          No picks in week 1 — it&apos;s just to get a feel for the new season. Picks start
+          week 2!
+        </div>
+      </div>
+    );
+  }
+
   if (picksLocked) {
     return (
       <div className="sp-card">

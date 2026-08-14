@@ -24,6 +24,10 @@ export async function submitPick(prevState, formData) {
     return { error: "Couldn't find the current week. Try again." };
   }
 
+  if (week === 1) {
+    return { error: "No picks in week 1 — it's just to get a feel for the season." };
+  }
+
   // The pick screen already hides itself once a player is eliminated, but
   // that's UI, not a security boundary — this action is a direct POST target
   // regardless of what's rendered, so re-check here too.

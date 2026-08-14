@@ -25,15 +25,19 @@ export async function GET(request) {
 
   const week = seasonState.current_week;
 
-  const { data: pool } = await supabase
-    .from("contestants")
-    .select("id, name")
-    .eq("status", "active")
-    .order("name");
+  // Week 1 never gets auto-picks — nobody can submit a real pick there
+  // either (enforced at the RLS level), it's a no-picks week by house rule.
+  if (week !== 1) {
+    const { data: pool } = await supabase
+      .from("contestants")
+      .select("id, name")
+      .eq("status", "active")
+      .order("name");
 
-  const autoPickError = await autoPickStragglers(supabase, week, pool || []);
-  if (autoPickError) {
-    return Response.json({ error: "Couldn't auto-pick for stragglers." }, { status: 500 });
+    const autoPickError = await autoPickStragglers(supabase, week, pool || []);
+    if (autoPickError) {
+      return Response.json({ error: "Couldn't auto-pick for stragglers." }, { status: 500 });
+    }
   }
 
   const { error } = await supabase.from("season_state").update({ picks_locked: true }).eq("id", 1);

@@ -184,7 +184,10 @@ export async function closeWeek(prevState, formData) {
   // admin closed the week without locking picks first. skipAutoPick (bye
   // weeks like week 1, where nobody picks at all) turns this off entirely,
   // since otherwise everyone with no pick would get one invented for them.
-  if (!skipAutoPick) {
+  // Week 1 also always skips regardless of the checkbox — nobody can submit
+  // a real pick there (enforced at the RLS level), so nobody should end up
+  // with an invented one either.
+  if (!skipAutoPick && week !== 1) {
     const { data: pool } = await supabase
       .from("contestants")
       .select("id, name")
@@ -220,7 +223,7 @@ export async function lockPicks(prevState, formData) {
     .single();
   const week = seasonState?.current_week ?? 1;
 
-  if (!skipAutoPick) {
+  if (!skipAutoPick && week !== 1) {
     const { data: pool } = await supabase
       .from("contestants")
       .select("id, name")
