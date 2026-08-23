@@ -21,10 +21,11 @@ export default async function GridPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete")
+    .select("current_week, is_complete, picks_locked")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
+  const picksLocked = !!seasonState?.picks_locked;
 
   const { data: players } = await supabase
     .from("profiles")
@@ -38,11 +39,14 @@ export default async function GridPage() {
     .from("contestants")
     .select("id, name, tribe, status, eliminated_week");
 
-  // Only closed weeks — this week's picks never render here (5.7 deadline gating).
+  // Closed weeks always show; the current week joins in once picks_locked
+  // is true (deadline gating — RLS enforces this too, see
+  // 0016_grid_shows_locked_picks.sql, so this is belt-and-suspenders).
+  const maxVisibleWeek = picksLocked ? currentWeek : currentWeek - 1;
   const { data: closedPicks } = await supabase
     .from("picks")
     .select("player_id, week, contestant_id, contestants(status, eliminated_week)")
-    .lt("week", currentWeek);
+    .lte("week", maxVisibleWeek);
 
   const gridData = buildGridData(players, allContestants, closedPicks);
 
@@ -74,7 +78,7 @@ export default async function GridPage() {
           <div className="sp-section-title">Season grid</div>
           <p className="sp-section-sub">
             Every player&apos;s pick history, one column per contestant — same layout as the
-            old spreadsheet. This week&apos;s pick stays blank until the admin closes it.
+            old spreadsheet. This week&apos;s picks stay blank until picks lock.
           </p>
           <SeasonGridTable
             {...gridData}
