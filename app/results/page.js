@@ -77,7 +77,7 @@ export default async function ResultsPage() {
 
   const { data: allContestants } = await supabase
     .from("contestants")
-    .select("id, name, tribe, status, eliminated_week");
+    .select("id, name, tribe, status, eliminated_week, photo_url");
 
   const { data: allPicks } = await supabase
     .from("picks")

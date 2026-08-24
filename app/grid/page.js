@@ -37,7 +37,7 @@ export default async function GridPage() {
   // active ones — a player's history includes contestants now eliminated.
   const { data: allContestants } = await supabase
     .from("contestants")
-    .select("id, name, tribe, status, eliminated_week");
+    .select("id, name, tribe, status, eliminated_week, photo_url");
 
   // Closed weeks always show; the current week joins in once picks_locked
   // is true (deadline gating — RLS enforces this too, see

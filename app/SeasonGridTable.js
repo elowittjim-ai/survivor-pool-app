@@ -101,6 +101,9 @@ export default function SeasonGridTable({
                 ...columnDivider(i),
               }}
             >
+              <div className="sp-avatar" style={{ margin: "0 auto 6px" }}>
+                {c.photo_url ? <img src={c.photo_url} alt={c.name} /> : c.name.slice(0, 2).toUpperCase()}
+              </div>
               {c.name}
               <div
                 className="sp-c-sub"
