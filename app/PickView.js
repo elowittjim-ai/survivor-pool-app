@@ -19,23 +19,21 @@ export default function PickView({
   currentPickName,
   picksLocked,
 }) {
-  const [selectedId, setSelectedId] = useState(currentPickId || null);
-  const [savedId, setSavedId] = useState(currentPickId || null);
-  const [savedName, setSavedName] = useState(currentPickName || null);
   const [state, formAction, pending] = useActionState(submitPick, initialState);
+  const [pendingId, setPendingId] = useState(null);
 
-  // useActionState hands back a fresh object on every dispatch, so this
-  // fires once per successful submit — even a second success right after
-  // the first (e.g. changing an already-locked pick again).
+  // formAction's async work has settled (success or error) once pending
+  // drops back to false — either way the tap-in-progress is over.
   useEffect(() => {
-    if (state.success) {
-      setSavedId(selectedId);
-      setSavedName(contestants.find((c) => c.id === selectedId)?.name ?? null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+    if (!pending) setPendingId(null);
+  }, [pending]);
 
-  const selectedContestant = contestants.find((c) => c.id === selectedId) || null;
+  function pick(contestantId) {
+    setPendingId(contestantId);
+    const formData = new FormData();
+    formData.append("contestantId", contestantId);
+    formAction(formData);
+  }
 
   if (week === 1) {
     return (
@@ -56,12 +54,12 @@ export default function PickView({
     return (
       <div className="sp-card">
         <div className="sp-section-title">Week {week} pick</div>
-        {savedId ? (
+        {currentPickId ? (
           <div
             className="sp-banner"
             style={{ margin: 0, background: "var(--sp-teal-soft)", color: "#9fcfc0" }}
           >
-            🔒 Picks are locked for this week. Your pick: <strong>{savedName}</strong>.
+            🔒 Picks are locked for this week. Your pick: <strong>{currentPickName}</strong>.
           </div>
         ) : (
           <div className="sp-banner sp-banner-error" style={{ margin: 0 }}>
@@ -74,23 +72,21 @@ export default function PickView({
   }
 
   const usedSet = new Set(usedIds);
-  const hasUnsavedChange = selectedId !== savedId;
 
   return (
-    <>
-    <div className="sp-card" style={{ paddingBottom: 90 }}>
+    <div className="sp-card">
       <div className="sp-section-title">Week {week} pick</div>
       <p className="sp-section-sub">
-        Who do you think survives this episode? Tap to select, then submit.
+        Who do you think survives this episode? Tap a contestant to lock in your pick.
       </p>
 
-      {savedId && !hasUnsavedChange && (
+      {currentPickId && (
         <div
           className="sp-banner"
           style={{ margin: "0 0 14px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}
         >
-          🔒 Locked in: <strong>{savedName}</strong>. You can change your pick anytime
-          before the admin closes the week.
+          🔒 Locked in: <strong>{currentPickName}</strong>. Tap another contestant anytime
+          before the admin closes the week to change it.
         </div>
       )}
 
@@ -108,59 +104,38 @@ export default function PickView({
 
       <div className="sp-grid-2">
         {contestants.map((c) => {
-          const isUsed = usedSet.has(c.id) && !clearedBoard && c.id !== selectedId;
-          const selected = selectedId === c.id;
+          const isCurrent = currentPickId === c.id;
+          const isUsed = usedSet.has(c.id) && !clearedBoard && !isCurrent;
+          const isPending = pendingId === c.id;
+          const isClickable = !isUsed && !isCurrent && !pending;
           return (
             <div
               key={c.id}
               className={
                 "sp-contestant" +
-                (selected ? " sp-contestant-selected" : "") +
-                (isUsed ? " sp-contestant-disabled" : "")
+                (isCurrent ? " sp-contestant-selected" : "") +
+                (isUsed || (pending && !isPending) ? " sp-contestant-disabled" : "")
               }
               onClick={() => {
-                if (!isUsed) setSelectedId(c.id);
+                if (isClickable) pick(c.id);
               }}
             >
               <div className="sp-avatar">
                 {c.photo_url ? <img src={c.photo_url} alt={c.name} /> : initials(c.name)}
               </div>
-              <p className="sp-c-name" style={selected ? { color: "var(--sp-ember)" } : undefined}>
+              <p className="sp-c-name" style={isCurrent ? { color: "var(--sp-ember)" } : undefined}>
                 {c.name}
               </p>
               <p
                 className="sp-c-sub"
                 style={isUsed ? undefined : { fontSize: 13, fontWeight: 700, color: tribeColor(c.tribe) }}
               >
-                {isUsed ? "Already picked" : (c.tribe || "—") + " tribe"}
+                {isPending ? "Submitting…" : isCurrent ? "Your pick" : isUsed ? "Already picked" : (c.tribe || "—") + " tribe"}
               </p>
             </div>
           );
         })}
       </div>
-
     </div>
-
-    <div className="sp-sticky-footer">
-      <form action={formAction}>
-        <input type="hidden" name="contestantId" value={selectedId || ""} />
-        <button
-          type="submit"
-          className={
-            "sp-btn sp-btn-block " + (hasUnsavedChange ? "sp-btn-primary" : "sp-btn-secondary")
-          }
-          disabled={!selectedContestant || pending || !hasUnsavedChange}
-        >
-          {pending
-            ? "Submitting…"
-            : !selectedContestant
-              ? "Select a contestant to submit"
-              : hasUnsavedChange
-                ? `Submit pick: ${selectedContestant.name}`
-                : `✓ Locked in: ${selectedContestant.name}`}
-        </button>
-      </form>
-    </div>
-    </>
   );
 }
