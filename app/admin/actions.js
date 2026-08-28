@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { autoPickStragglers } from "@/lib/autoPickStragglers";
+import { sendApprovalEmail } from "@/lib/email";
 
 async function requireAdmin(supabase) {
   const {
@@ -26,12 +27,20 @@ export async function approvePlayer(prevState, formData) {
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };
 
+  const { data: player } = await supabase
+    .from("profiles")
+    .select("email, display_name")
+    .eq("id", profileId)
+    .single();
+
   const { error } = await supabase
     .from("profiles")
     .update({ is_approved: true })
     .eq("id", profileId);
 
   if (error) return { error: "Couldn't approve that player." };
+
+  await sendApprovalEmail({ to: player?.email, displayName: player?.display_name });
 
   revalidatePath("/admin");
   return { success: true };
@@ -112,9 +121,13 @@ export async function bulkApprove(prevState, formData) {
     .update({ is_approved: true })
     .in("email", emails)
     .eq("is_approved", false)
-    .select("email");
+    .select("email, display_name");
 
   if (error) return { error: "Couldn't bulk-approve — try again." };
+
+  await Promise.all(
+    (matches || []).map((m) => sendApprovalEmail({ to: m.email, displayName: m.display_name }))
+  );
 
   const matchedEmails = new Set((matches || []).map((m) => m.email));
   const notYetSignedUp = emails.filter((e) => !matchedEmails.has(e));
