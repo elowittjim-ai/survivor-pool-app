@@ -8,6 +8,7 @@ import {
   declareWinner,
   promoteToAdmin,
   revokeAccess,
+  updateVenmoHandle,
   bulkApprove,
   toggleMute,
   fixPick,
@@ -148,6 +149,8 @@ function PlayerRow({ player, isSelf }) {
   const [promoteState, promoteAction, promotePending] = useActionState(promoteToAdmin, initialState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeAccess, initialState);
   const [muteState, muteAction, mutePending] = useActionState(toggleMute, initialState);
+  const [venmoState, venmoAction, venmoPending] = useActionState(updateVenmoHandle, initialState);
+  const [venmoHandle, setVenmoHandle] = useState(player.venmo_handle || "");
   if (revokeState.success) return null;
 
   const muted = player.chat_muted;
@@ -166,8 +169,39 @@ function PlayerRow({ player, isSelf }) {
             Muted
           </span>
         )}
+        <br />
+        <span className="sp-c-sub">{player.email}</span>
       </span>
-      <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <span style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <form action={venmoAction} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input type="hidden" name="profileId" value={player.id} />
+          <input
+            className="sp-input"
+            style={{ width: 110, padding: "6px 8px" }}
+            type="text"
+            name="venmoHandle"
+            value={venmoHandle}
+            onChange={(e) => setVenmoHandle(e.target.value)}
+            placeholder="Venmo @handle"
+          />
+          <button
+            type="submit"
+            className="sp-btn sp-btn-secondary"
+            disabled={venmoPending || venmoHandle === (player.venmo_handle || "")}
+          >
+            {venmoPending ? "…" : "Save"}
+          </button>
+        </form>
+        {player.venmo_handle && (
+          <a
+            href={`https://venmo.com/${player.venmo_handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sp-btn sp-btn-secondary"
+          >
+            💸 Pay
+          </a>
+        )}
         {!player.is_admin && (
           <form action={promoteAction}>
             <input type="hidden" name="profileId" value={player.id} />
@@ -194,9 +228,9 @@ function PlayerRow({ player, isSelf }) {
           </form>
         )}
       </span>
-      {(promoteState.error || revokeState.error || muteState.error) && (
+      {(promoteState.error || revokeState.error || muteState.error || venmoState.error) && (
         <div className="sp-banner sp-banner-error" style={{ marginTop: 8, width: "100%" }}>
-          {promoteState.error || revokeState.error || muteState.error}
+          {promoteState.error || revokeState.error || muteState.error || venmoState.error}
         </div>
       )}
     </div>

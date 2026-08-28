@@ -75,6 +75,25 @@ export async function revokeAccess(prevState, formData) {
   return { success: true };
 }
 
+export async function updateVenmoHandle(prevState, formData) {
+  const profileId = String(formData.get("profileId") || "");
+  if (!profileId) return { error: "Missing player." };
+  const venmoHandle = String(formData.get("venmoHandle") || "").trim().replace(/^@/, "");
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ venmo_handle: venmoHandle || null })
+    .eq("id", profileId);
+
+  if (error) return { error: "Couldn't save that Venmo handle." };
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 export async function bulkApprove(prevState, formData) {
   const raw = String(formData.get("emails") || "");
   const emails = [...new Set(

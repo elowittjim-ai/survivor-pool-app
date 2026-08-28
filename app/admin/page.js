@@ -29,7 +29,7 @@ export default async function AdminPage() {
 
   const { data: approvedPlayers } = await supabase
     .from("profiles")
-    .select("id, display_name, is_admin, chat_muted")
+    .select("id, display_name, email, is_admin, chat_muted, venmo_handle")
     .eq("is_approved", true)
     .order("display_name");
 
