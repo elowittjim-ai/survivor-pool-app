@@ -28,10 +28,11 @@ export default async function HomePage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete, commissioner_message")
+    .select("current_week, is_complete, commissioner_message, season_started")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
+  const seasonStarted = !!seasonState?.season_started;
 
   return (
     <div>
@@ -60,10 +61,16 @@ export default async function HomePage() {
         <div className="sp-hero">
           <img src="/survivor-logo.png" alt="Survivor" className="sp-hero-logo" />
           <div className="sp-display sp-hero-title">Welcome back, {profile.display_name}</div>
-          <p className="sp-hero-sub">Week {currentWeek} is underway — outwit, outplay, outlast.</p>
-          <Link href="/pick" className="sp-btn sp-btn-primary" style={{ marginTop: 14 }}>
-            🔥 Make this week&apos;s pick
-          </Link>
+          <p className="sp-hero-sub">
+            {seasonStarted
+              ? `Week ${currentWeek} is underway — outwit, outplay, outlast.`
+              : "The season hasn't started yet — check back once it premieres!"}
+          </p>
+          {seasonStarted && (
+            <Link href="/pick" className="sp-btn sp-btn-primary" style={{ marginTop: 14 }}>
+              🔥 Make this week&apos;s pick
+            </Link>
+          )}
         </div>
 
         {seasonState?.commissioner_message && (

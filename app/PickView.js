@@ -18,6 +18,7 @@ export default function PickView({
   currentPickId,
   currentPickName,
   picksLocked,
+  seasonStarted,
 }) {
   const [state, formAction, pending] = useActionState(submitPick, initialState);
   const [pendingId, setPendingId] = useState(null);
@@ -33,6 +34,21 @@ export default function PickView({
     const formData = new FormData();
     formData.append("contestantId", contestantId);
     formAction(formData);
+  }
+
+  if (!seasonStarted) {
+    return (
+      <div className="sp-card">
+        <div className="sp-section-title">Picks aren&apos;t open yet</div>
+        <div
+          className="sp-banner"
+          style={{ margin: 0, background: "var(--sp-gold-soft)", color: "#e9c77a" }}
+        >
+          The season hasn&apos;t started yet — the Commissioner will open picks once it
+          premieres. Check back then!
+        </div>
+      </div>
+    );
   }
 
   if (week === 1) {

@@ -10,6 +10,7 @@ import {
   revokeAccess,
   updateVenmoHandle,
   bulkApprove,
+  startSeason,
   toggleMute,
   fixPick,
   fixContestantStatus,
@@ -288,6 +289,28 @@ function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek }) {
           );
         })
       )}
+    </div>
+  );
+}
+
+function StartSeasonCard({ seasonStarted, currentWeek }) {
+  const [state, formAction, pending] = useActionState(startSeason, initialState);
+  if (seasonStarted) return null;
+
+  return (
+    <div className="sp-card" style={{ border: "2px solid var(--sp-gold)" }}>
+      <div className="sp-section-title">🚦 Season hasn&apos;t started yet</div>
+      <p className="sp-section-sub">
+        Players can sign up and get approved right now, but picks stay paused — and the
+        weekly auto-lock won&apos;t run — until you start the season. Do this once the
+        premiere is about to air and you&apos;re ready for week {currentWeek} picks to open.
+      </p>
+      {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
+      <form action={formAction}>
+        <button type="submit" className="sp-btn sp-btn-primary" disabled={pending}>
+          {pending ? "Starting…" : "▶️ Start the season"}
+        </button>
+      </form>
     </div>
   );
 }
@@ -651,6 +674,7 @@ export default function AdminView({
   commissionerMessage,
   currentWeekPicks,
   picksLocked,
+  seasonStarted,
   questions,
   totalPrizePool,
   buyInAmount,
@@ -658,6 +682,7 @@ export default function AdminView({
 }) {
   return (
     <div>
+      <StartSeasonCard seasonStarted={seasonStarted} currentWeek={currentWeek} />
       <CommissionerMessageCard currentMessage={commissionerMessage} />
       <QuestionsCard questions={questions} />
       {pendingPlayers.length > 0 && (

@@ -15,11 +15,16 @@ export async function GET(request) {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete, picks_locked")
+    .select("current_week, is_complete, picks_locked, season_started")
     .eq("id", 1)
     .single();
 
-  if (!seasonState || seasonState.is_complete || seasonState.picks_locked) {
+  if (
+    !seasonState ||
+    !seasonState.season_started ||
+    seasonState.is_complete ||
+    seasonState.picks_locked
+  ) {
     return Response.json({ skipped: true });
   }
 

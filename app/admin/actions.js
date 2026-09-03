@@ -242,6 +242,22 @@ export async function closeWeek(prevState, formData) {
   return { success: true };
 }
 
+export async function startSeason(prevState, formData) {
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase
+    .from("season_state")
+    .update({ season_started: true })
+    .eq("id", 1);
+  if (error) return { error: "Couldn't start the season." };
+
+  revalidatePath("/admin");
+  revalidatePath("/pick");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function lockPicks(prevState, formData) {
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };

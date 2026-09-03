@@ -52,7 +52,7 @@ export default async function AdminPage() {
 
   const { data: seasonState } = await supabase
     .from("season_state")
-    .select("current_week, is_complete, commissioner_message, picks_locked, total_prize_pool, buy_in_amount, admin_fee_amount")
+    .select("current_week, is_complete, commissioner_message, picks_locked, season_started, total_prize_pool, buy_in_amount, admin_fee_amount")
     .eq("id", 1)
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
@@ -101,6 +101,7 @@ export default async function AdminPage() {
           commissionerMessage={seasonState?.commissioner_message}
           currentWeekPicks={currentWeekPicks || []}
           picksLocked={!!seasonState?.picks_locked}
+          seasonStarted={!!seasonState?.season_started}
           questions={questions || []}
           totalPrizePool={seasonState?.total_prize_pool}
           buyInAmount={seasonState?.buy_in_amount ?? 25}
