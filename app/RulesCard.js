@@ -31,6 +31,10 @@ const RULES_SECTIONS = [
     title: "Recap Weeks",
     body: "Some weeks Survivor airs a recap episode or a show with no tribal council — nobody goes home. When that happens, just submit your pick as usual for the following week.",
   },
+  {
+    title: "Multiple Eliminations & Commissioner's Discretion",
+    body: "If an episode has multiple eliminations, everyone eliminated counts for that week — pick any of them and you're out. The same goes if two episodes air back-to-back before the next deadline. Beyond that, the Commissioner is the final arbiter if anything unexpected comes up.",
+  },
 ];
 
 export default function RulesCard() {
