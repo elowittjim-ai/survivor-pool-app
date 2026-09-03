@@ -1,11 +1,11 @@
 const RULES_SECTIONS = [
   {
     title: "The Object of the Game",
-    body: "Survive each week by correctly predicting who will NOT be voted off the upcoming episode — whether by tribal council vote, medical evacuation, quitting, or being asked to leave the show.",
+    body: "Survive each week by correctly predicting who will NOT leave the game during upcoming episode — whether by tribal council vote, medical evacuation, quitting, or being asked to leave the show.",
   },
   {
     title: "Making Your Pick",
-    body: "Submit your pick in the app by Sunday at midnight for who you think survives the upcoming episode. If you don't submit in time, you'll automatically be assigned the next player in alphabetical order who's still available to you.",
+    body: "Submit your pick in the app by midnight Sunday (PST) for who you think survives the upcoming episode. If you don't submit in time, you'll automatically be assigned the next player in alphabetical order who's still available to you.",
   },
   {
     title: "Elimination",
