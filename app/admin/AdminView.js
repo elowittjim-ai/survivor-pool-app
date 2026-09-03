@@ -301,9 +301,10 @@ function StartSeasonCard({ seasonStarted, currentWeek }) {
     <div className="sp-card" style={{ border: "2px solid var(--sp-gold)" }}>
       <div className="sp-section-title">🚦 Season hasn&apos;t started yet</div>
       <p className="sp-section-sub">
-        Players can sign up and get approved right now, but picks stay paused — and the
-        weekly auto-lock won&apos;t run — until you start the season. Do this once the
-        premiere is about to air and you&apos;re ready for week {currentWeek} picks to open.
+        Players can already sign up, get approved, and preview the Home, Pick, and Season
+        Grid screens. The only thing this gates is the Sunday auto-lock — it won&apos;t
+        run until you start the season. Do this once the premiere is about to air and
+        you&apos;re ready for week {currentWeek} to really be underway.
       </p>
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       <form action={formAction}>
