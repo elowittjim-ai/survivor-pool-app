@@ -113,6 +113,13 @@ export async function bulkApprove(prevState, formData) {
   )];
   if (emails.length === 0) return { error: "Paste at least one email." };
 
+  const invalid = emails.filter((e) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+  if (invalid.length > 0) {
+    return {
+      error: `This doesn't look like a complete email address, so nobody was approved: ${invalid.join(", ")}. Double-check for typos or a missing ".com" and try again.`,
+    };
+  }
+
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };
 
