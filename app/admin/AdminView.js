@@ -13,12 +13,12 @@ import {
   bulkApprove,
   startSeason,
   toggleMute,
+  answerQuestion,
   fixPick,
   fixContestantStatus,
   updateCommissionerMessage,
   lockPicks,
   updateContestantTribe,
-  markQuestionAnswered,
   updateTotalPrizePool,
 } from "./actions";
 
@@ -92,7 +92,7 @@ function ApproveRow({ player }) {
 }
 
 function QuestionRow({ question }) {
-  const [state, formAction, pending] = useActionState(markQuestionAnswered, initialState);
+  const [state, formAction, pending] = useActionState(answerQuestion, initialState);
   const isAnswered = question.answered || state.success;
 
   return (
@@ -103,12 +103,23 @@ function QuestionRow({ question }) {
       </div>
       <p className="sp-section-sub" style={{ margin: 0 }}>{question.question}</p>
       {isAnswered ? (
-        <span className="sp-c-sub">✓ Answered</span>
+        <p style={{ margin: 0 }}>
+          <span className="sp-c-sub">✓ Replied: </span>
+          {question.answer}
+        </p>
       ) : (
-        <form action={formAction}>
+        <form action={formAction} className="sp-form" style={{ width: "100%" }}>
           <input type="hidden" name="questionId" value={question.id} />
+          {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: 0 }}>{state.error}</div>}
+          <textarea
+            className="sp-input"
+            name="answer"
+            rows={2}
+            placeholder="Type your reply…"
+            style={{ resize: "vertical", fontFamily: "inherit" }}
+          />
           <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
-            {pending ? "…" : "Mark answered"}
+            {pending ? "Sending…" : "Send reply"}
           </button>
         </form>
       )}

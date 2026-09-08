@@ -33,6 +33,12 @@ export default async function HomePage() {
     .single();
   const currentWeek = seasonState?.current_week ?? 1;
 
+  const { data: myQuestions } = await supabase
+    .from("questions")
+    .select("id, question, answer, answered, created_at")
+    .eq("player_id", user.id)
+    .order("created_at", { ascending: false });
+
   return (
     <div>
       <div className="sp-header">
@@ -77,7 +83,7 @@ export default async function HomePage() {
 
         <RulesCard />
 
-        <AskQuestionForm />
+        <AskQuestionForm questions={myQuestions || []} />
       </main>
     </div>
   );

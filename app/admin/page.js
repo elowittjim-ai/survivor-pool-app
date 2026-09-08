@@ -66,7 +66,7 @@ export default async function AdminPage() {
 
   const { data: questions } = await supabase
     .from("questions")
-    .select("id, question, answered, created_at, profiles(display_name)")
+    .select("id, question, answer, answered, created_at, profiles(display_name)")
     .order("answered", { ascending: true })
     .order("created_at", { ascending: false });
 

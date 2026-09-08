@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoPickStragglers } from "@/lib/autoPickStragglers";
-import { sendApprovalEmail } from "@/lib/email";
+import { sendApprovalEmail, sendQuestionAnsweredEmail } from "@/lib/email";
 
 async function requireAdmin(supabase) {
   const {
@@ -459,17 +459,36 @@ export async function updateContestantTribe(prevState, formData) {
   return { success: true };
 }
 
-export async function markQuestionAnswered(prevState, formData) {
+export async function answerQuestion(prevState, formData) {
   const questionId = String(formData.get("questionId") || "");
+  const answer = String(formData.get("answer") || "").trim();
   if (!questionId) return { error: "Missing question." };
+  if (!answer) return { error: "Type a reply first." };
 
   const supabase = await createClient();
   if (!(await requireAdmin(supabase))) return { error: "Admins only." };
 
-  const { error } = await supabase.from("questions").update({ answered: true }).eq("id", questionId);
-  if (error) return { error: "Couldn't update that question." };
+  const { data: q } = await supabase
+    .from("questions")
+    .select("question, profiles(display_name, email)")
+    .eq("id", questionId)
+    .single();
+
+  const { error } = await supabase
+    .from("questions")
+    .update({ answer, answered: true })
+    .eq("id", questionId);
+  if (error) return { error: "Couldn't save your reply." };
+
+  await sendQuestionAnsweredEmail({
+    to: q?.profiles?.email,
+    displayName: q?.profiles?.display_name,
+    question: q?.question,
+    answer,
+  });
 
   revalidatePath("/admin");
+  revalidatePath("/");
   return { success: true };
 }
 

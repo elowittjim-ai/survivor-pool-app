@@ -5,7 +5,7 @@ import { askQuestion } from "./actions";
 
 const initialState = { error: null, success: false };
 
-export default function AskQuestionForm() {
+export default function AskQuestionForm({ questions = [] }) {
   const [state, formAction, pending] = useActionState(askQuestion, initialState);
 
   return (
@@ -30,6 +30,24 @@ export default function AskQuestionForm() {
           {pending ? "Sending…" : "Send question"}
         </button>
       </form>
+
+      {questions.length > 0 && (
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+          {questions.map((q) => (
+            <div key={q.id} className="sp-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <p className="sp-c-sub" style={{ margin: 0 }}>You asked: {q.question}</p>
+              {q.answer ? (
+                <p style={{ margin: 0 }}>
+                  <strong>Commissioner: </strong>
+                  {q.answer}
+                </p>
+              ) : (
+                <p className="sp-c-sub" style={{ margin: 0 }}>Waiting on a reply…</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
