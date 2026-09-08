@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { autoPickStragglers } from "@/lib/autoPickStragglers";
 import { sendApprovalEmail } from "@/lib/email";
 
@@ -41,6 +42,20 @@ export async function approvePlayer(prevState, formData) {
   if (error) return { error: "Couldn't approve that player." };
 
   await sendApprovalEmail({ to: player?.email, displayName: player?.display_name });
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function rejectPlayer(prevState, formData) {
+  const profileId = String(formData.get("profileId") || "");
+  if (!profileId) return { error: "Missing player." };
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await createAdminClient().auth.admin.deleteUser(profileId);
+  if (error) return { error: "Couldn't reject that player." };
 
   revalidatePath("/admin");
   return { success: true };

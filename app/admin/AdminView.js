@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import {
   approvePlayer,
+  rejectPlayer,
   addContestant,
   closeWeek,
   declareWinner,
@@ -55,19 +56,37 @@ function CommissionerMessageCard({ currentMessage }) {
 }
 
 function ApproveRow({ player }) {
-  const [state, formAction, pending] = useActionState(approvePlayer, initialState);
-  if (state.success) return null;
+  const [approveState, approveAction, approvePending] = useActionState(approvePlayer, initialState);
+  const [rejectState, rejectAction, rejectPending] = useActionState(rejectPlayer, initialState);
+  if (approveState.success || rejectState.success) return null;
   return (
     <div className="sp-row">
       <span>
         {player.display_name} <span className="sp-c-sub">({player.email})</span>
       </span>
-      <form action={formAction}>
-        <input type="hidden" name="profileId" value={player.id} />
-        <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
-          {pending ? "Approving…" : "Approve"}
-        </button>
-      </form>
+      <div style={{ display: "flex", gap: 8 }}>
+        <form action={rejectAction}>
+          <input type="hidden" name="profileId" value={player.id} />
+          <button
+            type="submit"
+            className="sp-btn sp-btn-secondary"
+            disabled={approvePending || rejectPending}
+            onClick={(e) => {
+              if (!confirm(`Reject ${player.display_name}? This deletes their account.`)) {
+                e.preventDefault();
+              }
+            }}
+          >
+            {rejectPending ? "Rejecting…" : "Reject"}
+          </button>
+        </form>
+        <form action={approveAction}>
+          <input type="hidden" name="profileId" value={player.id} />
+          <button type="submit" className="sp-btn sp-btn-secondary" disabled={approvePending || rejectPending}>
+            {approvePending ? "Approving…" : "Approve"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
