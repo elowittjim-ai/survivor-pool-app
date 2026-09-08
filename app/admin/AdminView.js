@@ -59,7 +59,9 @@ function ApproveRow({ player }) {
   if (state.success) return null;
   return (
     <div className="sp-row">
-      <span>{player.display_name}</span>
+      <span>
+        {player.display_name} <span className="sp-c-sub">({player.email})</span>
+      </span>
       <form action={formAction}>
         <input type="hidden" name="profileId" value={player.id} />
         <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>

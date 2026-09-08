@@ -23,7 +23,7 @@ export default async function AdminPage() {
 
   const { data: pendingPlayers } = await supabase
     .from("profiles")
-    .select("id, display_name")
+    .select("id, display_name, email")
     .eq("is_approved", false)
     .order("display_name");
 
