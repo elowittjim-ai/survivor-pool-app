@@ -14,6 +14,7 @@ import {
   startSeason,
   toggleMute,
   answerQuestion,
+  deleteQuestion,
   fixPick,
   fixContestantStatus,
   updateCommissionerMessage,
@@ -93,13 +94,34 @@ function ApproveRow({ player }) {
 
 function QuestionRow({ question }) {
   const [state, formAction, pending] = useActionState(answerQuestion, initialState);
+  const [deleteState, deleteAction, deletePending] = useActionState(deleteQuestion, initialState);
   const isAnswered = question.answered || state.success;
+
+  if (deleteState.success) return null;
 
   return (
     <div className="sp-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
       <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
         <strong>{question.profiles?.display_name || "Unknown player"}</strong>
-        <span className="sp-c-sub">{new Date(question.created_at).toLocaleDateString()}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span className="sp-c-sub">{new Date(question.created_at).toLocaleDateString()}</span>
+          <form action={deleteAction}>
+            <input type="hidden" name="questionId" value={question.id} />
+            <button
+              type="submit"
+              className="sp-btn sp-btn-secondary"
+              style={{ padding: "2px 8px", fontSize: "0.8em" }}
+              disabled={deletePending}
+              onClick={(e) => {
+                if (!confirm("Delete this question? This can't be undone.")) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              {deletePending ? "Deleting…" : "Delete"}
+            </button>
+          </form>
+        </div>
       </div>
       <p className="sp-section-sub" style={{ margin: 0 }}>{question.question}</p>
       {isAnswered ? (

@@ -492,6 +492,21 @@ export async function answerQuestion(prevState, formData) {
   return { success: true };
 }
 
+export async function deleteQuestion(prevState, formData) {
+  const questionId = String(formData.get("questionId") || "");
+  if (!questionId) return { error: "Missing question." };
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { error } = await supabase.from("questions").delete().eq("id", questionId);
+  if (error) return { error: "Couldn't delete that question." };
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function updateCommissionerMessage(prevState, formData) {
   const message = String(formData.get("message") || "").trim();
 
