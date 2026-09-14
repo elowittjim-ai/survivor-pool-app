@@ -15,6 +15,7 @@ import {
   toggleMute,
   answerQuestion,
   deleteQuestion,
+  sendReminder,
   fixPick,
   fixContestantStatus,
   updateCommissionerMessage,
@@ -50,6 +51,47 @@ function CommissionerMessageCard({ currentMessage }) {
         />
         <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
           {pending ? "Saving…" : "Save message"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function SendReminderCard() {
+  const [state, formAction, pending] = useActionState(sendReminder, initialState);
+
+  return (
+    <div className="sp-card">
+      <div className="sp-section-title">📧 Send reminder email</div>
+      <p className="sp-section-sub">
+        Emails everyone who has an account (approved or still pending) — good for pick
+        deadlines, buy-in nudges, or any other announcement.
+      </p>
+      {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
+      {state?.success && (
+        <div className="sp-banner" style={{ margin: "0 0 10px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}>
+          Sent to {state.sentCount} of {state.totalCount} players.
+        </div>
+      )}
+      <form
+        action={formAction}
+        className="sp-form"
+        onSubmit={(e) => {
+          if (!confirm("Send this email to every player with an account? This can't be undone.")) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <input className="sp-input" name="subject" placeholder="Subject" />
+        <textarea
+          className="sp-input"
+          name="message"
+          rows={4}
+          placeholder="e.g. Reminder: picks lock Sunday 8pm before the episode airs!"
+          style={{ resize: "vertical", fontFamily: "inherit" }}
+        />
+        <button type="submit" className="sp-btn sp-btn-secondary" disabled={pending}>
+          {pending ? "Sending…" : "Send to all players"}
         </button>
       </form>
     </div>
@@ -739,6 +781,7 @@ export default function AdminView({
     <div>
       <StartSeasonCard seasonStarted={seasonStarted} currentWeek={currentWeek} />
       <CommissionerMessageCard currentMessage={commissionerMessage} />
+      <SendReminderCard />
       <QuestionsCard questions={questions} />
       {pendingPlayers.length > 0 && (
         <div className="sp-card">

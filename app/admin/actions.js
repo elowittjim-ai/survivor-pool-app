@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoPickStragglers } from "@/lib/autoPickStragglers";
-import { sendApprovalEmail, sendQuestionAnsweredEmail } from "@/lib/email";
+import { sendApprovalEmail, sendQuestionAnsweredEmail, sendReminderEmail } from "@/lib/email";
 
 async function requireAdmin(supabase) {
   const {
@@ -490,6 +490,36 @@ export async function answerQuestion(prevState, formData) {
   revalidatePath("/admin");
   revalidatePath("/");
   return { success: true };
+}
+
+export async function sendReminder(prevState, formData) {
+  const subject = String(formData.get("subject") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+  if (!subject || !message) return { error: "Subject and message are both required." };
+
+  const supabase = await createClient();
+  if (!(await requireAdmin(supabase))) return { error: "Admins only." };
+
+  const { data: players, error } = await supabase
+    .from("profiles")
+    .select("email, display_name")
+    .not("email", "is", null);
+  if (error) return { error: "Couldn't load the player list." };
+
+  const recipients = (players || []).filter((p) => p.email);
+  if (recipients.length === 0) return { error: "No player emails on file." };
+
+  // Sent one request per recipient rather than one email with everyone in
+  // "to" (which would expose every address to every other player). Resend's
+  // rate limit may throttle a very large list — fine at this pool's size.
+  const results = await Promise.all(
+    recipients.map((p) => sendReminderEmail({ to: p.email, displayName: p.display_name, subject, message }))
+  );
+  const sentCount = results.filter((r) => r.ok).length;
+
+  if (sentCount === 0) return { error: "Couldn't send — check that RESEND_API_KEY is set." };
+
+  return { success: true, sentCount, totalCount: recipients.length };
 }
 
 export async function deleteQuestion(prevState, formData) {
