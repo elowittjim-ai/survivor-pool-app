@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "../login/actions";
 import AdminView from "./AdminView";
 
+// Sending reminder emails to the full player list is throttled to stay under
+// Resend's rate limit, which can take longer than the platform's default
+// function timeout for a large pool.
+export const maxDuration = 60;
+
 export default async function AdminPage() {
   const supabase = await createClient();
   const {

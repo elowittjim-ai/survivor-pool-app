@@ -511,10 +511,21 @@ export async function sendReminder(prevState, formData) {
 
   // Sent one request per recipient rather than one email with everyone in
   // "to" (which would expose every address to every other player). Resend's
-  // rate limit may throttle a very large list — fine at this pool's size.
-  const results = await Promise.all(
-    recipients.map((p) => sendReminderEmail({ to: p.email, displayName: p.display_name, subject, message }))
-  );
+  // plan caps this at 10 requests/second, so a pool this size (~100 players)
+  // firing all at once got every single request 429'd — batch and pace them
+  // instead of Promise.all-ing the whole list.
+  const BATCH_SIZE = 8;
+  const results = [];
+  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+    const batch = recipients.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map((p) => sendReminderEmail({ to: p.email, displayName: p.display_name, subject, message }))
+    );
+    results.push(...batchResults);
+    if (i + BATCH_SIZE < recipients.length) {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    }
+  }
   const sentCount = results.filter((r) => r.ok).length;
 
   if (sentCount === 0) return { error: "Couldn't send — check that RESEND_API_KEY is set." };
