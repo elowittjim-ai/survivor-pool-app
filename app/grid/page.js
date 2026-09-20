@@ -77,8 +77,7 @@ export default async function GridPage() {
         <div className="sp-card">
           <div className="sp-section-title">Season grid</div>
           <p className="sp-section-sub">
-            Every player&apos;s pick history, one column per contestant — same layout as the
-            old spreadsheet. This week&apos;s picks stay blank until picks lock.
+            This week&apos;s picks stay blank until picks lock.
           </p>
           <SeasonGridTable
             {...gridData}
