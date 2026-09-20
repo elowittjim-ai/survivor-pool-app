@@ -61,6 +61,45 @@ export async function submitPick(prevState, formData) {
   return { success: true };
 }
 
+export async function renameSelf(prevState, formData) {
+  const newName = String(formData.get("displayName") || "").trim();
+  if (!newName) {
+    return { error: "Enter a name." };
+  }
+  if (newName.length > 40) {
+    return { error: "Name is too long." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "You need to be logged in." };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.display_name?.toLowerCase() !== newName.toLowerCase()) {
+    const { data: taken } = await supabase.rpc("display_name_taken", { check_name: newName });
+    if (taken) {
+      return { error: `"${newName}" is already taken by another player.` };
+    }
+  }
+
+  const { error } = await supabase.rpc("rename_self", { new_name: newName });
+  if (error) {
+    return { error: "Couldn't save that name — try again." };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true, displayName: newName };
+}
+
 export async function askQuestion(prevState, formData) {
   const question = String(formData.get("question") || "").trim();
   if (!question) {

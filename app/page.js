@@ -5,6 +5,7 @@ import { signOut } from "./login/actions";
 import TabNav from "./TabNav";
 import AskQuestionForm from "./AskQuestionForm";
 import RulesCard from "./RulesCard";
+import EditNameForm from "./EditNameForm";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -67,6 +68,9 @@ export default async function HomePage() {
           <img src="/survivor-logo.png" alt="Survivor" className="sp-hero-logo" />
           <div className="sp-display sp-hero-title">Welcome back, {profile.display_name}</div>
           <p className="sp-hero-sub">Week {currentWeek} is underway — outwit, outplay, outlast.</p>
+          <div style={{ marginTop: 8 }}>
+            <EditNameForm currentName={profile.display_name} />
+          </div>
           <Link href="/pick" className="sp-btn sp-btn-primary" style={{ marginTop: 14 }}>
             🔥 Make this week&apos;s pick
           </Link>
