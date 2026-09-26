@@ -531,15 +531,26 @@ function RosterCard() {
   );
 }
 
-function FixPickCard({ approvedPlayers, allContestants, currentWeek }) {
+function FixPickCard({ approvedPlayers, allContestants, currentWeek, currentWeekPicks }) {
   const [state, formAction, pending] = useActionState(fixPick, initialState);
+  const [playerId, setPlayerId] = useState("");
+  const [week, setWeek] = useState(currentWeek);
+  const currentPick =
+    playerId && Number(week) === currentWeek
+      ? currentWeekPicks.find((p) => p.player_id === playerId)?.contestants?.name || null
+      : null;
   return (
     <div className="sp-card">
-      <div className="sp-section-title">Fix a pick</div>
+      <div className="sp-section-title">Change a player&apos;s pick</div>
       <p className="sp-section-sub">
         Change what a player is on record as having picked for a given week — past or
         current. Overwrites whatever&apos;s there now.
       </p>
+      {playerId && Number(week) === currentWeek && (
+        <p className="sp-section-sub">
+          Current week {currentWeek} pick: <strong>{currentPick || "none yet"}</strong>
+        </p>
+      )}
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
       {state?.success && (
         <div className="sp-banner" style={{ margin: "0 0 10px", background: "var(--sp-teal-soft)", color: "#9fcfc0" }}>
@@ -549,7 +560,14 @@ function FixPickCard({ approvedPlayers, allContestants, currentWeek }) {
       <form action={formAction} className="sp-form" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
         <div style={{ flex: 2, minWidth: 140 }}>
           <label className="sp-label" htmlFor="fix-pick-player">Player</label>
-          <select id="fix-pick-player" name="playerId" className="sp-input" required defaultValue="">
+          <select
+            id="fix-pick-player"
+            name="playerId"
+            className="sp-input"
+            required
+            value={playerId}
+            onChange={(e) => setPlayerId(e.target.value)}
+          >
             <option value="" disabled>Select a player</option>
             {approvedPlayers.map((p) => (
               <option key={p.id} value={p.id}>{p.display_name}</option>
@@ -565,7 +583,8 @@ function FixPickCard({ approvedPlayers, allContestants, currentWeek }) {
             type="number"
             min={1}
             max={currentWeek}
-            defaultValue={currentWeek}
+            value={week}
+            onChange={(e) => setWeek(e.target.value)}
             required
           />
         </div>
@@ -656,15 +675,14 @@ function FixContestantRow({ contestant }) {
   );
 }
 
-function CorrectionsCard({ approvedPlayers, allContestants, recentCorrections, currentWeek }) {
+function CorrectionsCard({ allContestants, recentCorrections }) {
   return (
     <div className="sp-card">
-      <div className="sp-section-title">Corrections</div>
+      <div className="sp-section-title">Contestant corrections</div>
       <p className="sp-section-sub">
-        Fix a mistake at any point in the season — nothing else needs recalculating by hand,
-        every screen reads live from this data.
+        Fix a tribe or elimination mistake at any point in the season — nothing else needs
+        recalculating by hand, every screen reads live from this data.
       </p>
-      <FixPickCard approvedPlayers={approvedPlayers} allContestants={allContestants} currentWeek={currentWeek} />
       <div style={{ marginTop: 14 }}>
         <div className="sp-c-sub" style={{ marginBottom: 6 }}>Contestant status</div>
         {allContestants.map((c) => (
@@ -777,44 +795,93 @@ export default function AdminView({
   buyInAmount,
   adminFeeAmount,
 }) {
+  const [tab, setTab] = useState("week");
+  const tabs = [
+    { id: "week", label: "This week" },
+    { id: "picks", label: "Picks" },
+    { id: "players", label: "Players", badge: pendingPlayers.length },
+    { id: "messages", label: "Messages", badge: questions.filter((q) => !q.answered).length },
+    { id: "setup", label: "Setup" },
+  ];
+
   return (
     <div>
-      <StartSeasonCard seasonStarted={seasonStarted} currentWeek={currentWeek} />
-      <CommissionerMessageCard currentMessage={commissionerMessage} />
-      <SendReminderCard />
-      <QuestionsCard questions={questions} />
-      {pendingPlayers.length > 0 && (
-        <div className="sp-card">
-          <div className="sp-section-title">Pending approvals</div>
-          <p className="sp-section-sub">Confirm their $25 Venmo buy-in, then approve.</p>
-          {pendingPlayers.map((p) => (
-            <ApproveRow key={p.id} player={p} />
-          ))}
-        </div>
+      <nav className="sp-tabs" style={{ overflowX: "auto" }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={"sp-tab" + (tab === t.id ? " sp-tab-active" : "")}
+            style={{ whiteSpace: "nowrap" }}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+            {t.badge > 0 && <span className="sp-pill">{t.badge}</span>}
+          </button>
+        ))}
+      </nav>
+
+      {tab === "week" && (
+        <>
+          <StartSeasonCard seasonStarted={seasonStarted} currentWeek={currentWeek} />
+          <LockPicksCard currentWeek={currentWeek} picksLocked={picksLocked} />
+          <CloseWeekCard currentWeek={currentWeek} activeContestants={activeContestants} />
+          <FinaleCard activeContestants={activeContestants} isComplete={isComplete} />
+        </>
       )}
-      <BulkApproveCard />
-      <PlayersCard approvedPlayers={approvedPlayers} currentUserId={currentUserId} />
-      <CurrentPicksCard
-        approvedPlayers={approvedPlayers}
-        currentWeekPicks={currentWeekPicks}
-        currentWeek={currentWeek}
-      />
-      <LockPicksCard currentWeek={currentWeek} picksLocked={picksLocked} />
-      <CloseWeekCard currentWeek={currentWeek} activeContestants={activeContestants} />
-      <RosterCard />
-      <CorrectionsCard
-        approvedPlayers={approvedPlayers}
-        allContestants={allContestants}
-        recentCorrections={recentCorrections}
-        currentWeek={currentWeek}
-      />
-      <PrizePoolCard
-        currentAmount={totalPrizePool}
-        buyInAmount={buyInAmount}
-        adminFeeAmount={adminFeeAmount}
-        approvedCount={approvedPlayers.length}
-      />
-      <FinaleCard activeContestants={activeContestants} isComplete={isComplete} />
+
+      {tab === "picks" && (
+        <>
+          <FixPickCard
+            approvedPlayers={approvedPlayers}
+            allContestants={allContestants}
+            currentWeek={currentWeek}
+            currentWeekPicks={currentWeekPicks}
+          />
+          <CurrentPicksCard
+            approvedPlayers={approvedPlayers}
+            currentWeekPicks={currentWeekPicks}
+            currentWeek={currentWeek}
+          />
+        </>
+      )}
+
+      {tab === "players" && (
+        <>
+          {pendingPlayers.length > 0 && (
+            <div className="sp-card">
+              <div className="sp-section-title">Pending approvals</div>
+              <p className="sp-section-sub">Confirm their $25 Venmo buy-in, then approve.</p>
+              {pendingPlayers.map((p) => (
+                <ApproveRow key={p.id} player={p} />
+              ))}
+            </div>
+          )}
+          <BulkApproveCard />
+          <PlayersCard approvedPlayers={approvedPlayers} currentUserId={currentUserId} />
+        </>
+      )}
+
+      {tab === "messages" && (
+        <>
+          <CommissionerMessageCard currentMessage={commissionerMessage} />
+          <SendReminderCard />
+          <QuestionsCard questions={questions} />
+        </>
+      )}
+
+      {tab === "setup" && (
+        <>
+          <RosterCard />
+          <CorrectionsCard allContestants={allContestants} recentCorrections={recentCorrections} />
+          <PrizePoolCard
+            currentAmount={totalPrizePool}
+            buyInAmount={buyInAmount}
+            adminFeeAmount={adminFeeAmount}
+            approvedCount={approvedPlayers.length}
+          />
+        </>
+      )}
     </div>
   );
 }
