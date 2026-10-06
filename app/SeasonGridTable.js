@@ -13,12 +13,19 @@ export function buildGridData(players, allContestants, picks) {
     .sort((a, b) => (a.eliminated_week ?? 0) - (b.eliminated_week ?? 0) || a.name.localeCompare(b.name));
   const contestantColumns = [...activeContestants, ...eliminatedContestants];
 
+  // The header count is scoped to a single week (the latest one present in
+  // `picks`) rather than a running season total — how many picked this
+  // contestant *this week*, not ever.
+  const weekToCount = (picks || []).reduce((max, p) => Math.max(max, p.week), 0);
+
   const weekByPlayerContestant = new Map();
   const pickCountByContestant = new Map();
   const picksByPlayer = new Map();
   for (const pick of picks || []) {
     weekByPlayerContestant.set(`${pick.player_id}:${pick.contestant_id}`, pick.week);
-    pickCountByContestant.set(pick.contestant_id, (pickCountByContestant.get(pick.contestant_id) || 0) + 1);
+    if (pick.week === weekToCount) {
+      pickCountByContestant.set(pick.contestant_id, (pickCountByContestant.get(pick.contestant_id) || 0) + 1);
+    }
     if (!picksByPlayer.has(pick.player_id)) picksByPlayer.set(pick.player_id, []);
     picksByPlayer.get(pick.player_id).push(pick);
   }
@@ -41,6 +48,7 @@ export function buildGridData(players, allContestants, picks) {
     contestantColumns,
     weekByPlayerContestant,
     pickCountByContestant,
+    weekToCount,
     aliveRows: rows.filter((p) => p.outWeek === null),
     outRows: rows.filter((p) => p.outWeek !== null),
   };
@@ -50,6 +58,7 @@ export default function SeasonGridTable({
   contestantColumns,
   weekByPlayerContestant,
   pickCountByContestant,
+  weekToCount,
   aliveRows,
   outRows,
   emptyContestantsMessage = "No contestants yet.",
@@ -117,7 +126,7 @@ export default function SeasonGridTable({
                 {c.status === "eliminated" ? " · out" : ""}
               </div>
               <div className="sp-c-sub" style={{ fontWeight: 400 }}>
-                picked {pickCountByContestant.get(c.id) || 0}
+                {pickCountByContestant.get(c.id) || 0} picked{weekToCount ? ` (wk ${weekToCount})` : ""}
               </div>
             </th>
           ))}
