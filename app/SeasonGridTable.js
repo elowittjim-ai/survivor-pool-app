@@ -13,17 +13,22 @@ export function buildGridData(players, allContestants, picks) {
     .sort((a, b) => (a.eliminated_week ?? 0) - (b.eliminated_week ?? 0) || a.name.localeCompare(b.name));
   const contestantColumns = [...activeContestants, ...eliminatedContestants];
 
-  // The header count is scoped to a single week (the latest one present in
-  // `picks`) rather than a running season total — how many picked this
-  // contestant *this week*, not ever.
+  // The header count is scoped to a single week per contestant, not a
+  // running season total — for someone still in it, how many picked them
+  // *this week*; for someone already out, how many picked them *the week
+  // they were voted out* (picks for them after that don't happen, so
+  // "latest week" would otherwise read as a wrong, stale 0).
   const weekToCount = (picks || []).reduce((max, p) => Math.max(max, p.week), 0);
+  const targetWeekByContestant = new Map();
+  for (const c of activeContestants) targetWeekByContestant.set(c.id, weekToCount);
+  for (const c of eliminatedContestants) targetWeekByContestant.set(c.id, c.eliminated_week);
 
   const weekByPlayerContestant = new Map();
   const pickCountByContestant = new Map();
   const picksByPlayer = new Map();
   for (const pick of picks || []) {
     weekByPlayerContestant.set(`${pick.player_id}:${pick.contestant_id}`, pick.week);
-    if (pick.week === weekToCount) {
+    if (pick.week === targetWeekByContestant.get(pick.contestant_id)) {
       pickCountByContestant.set(pick.contestant_id, (pickCountByContestant.get(pick.contestant_id) || 0) + 1);
     }
     if (!picksByPlayer.has(pick.player_id)) picksByPlayer.set(pick.player_id, []);
@@ -48,7 +53,7 @@ export function buildGridData(players, allContestants, picks) {
     contestantColumns,
     weekByPlayerContestant,
     pickCountByContestant,
-    weekToCount,
+    targetWeekByContestant,
     aliveRows: rows.filter((p) => p.outWeek === null),
     outRows: rows.filter((p) => p.outWeek !== null),
   };
@@ -58,7 +63,7 @@ export default function SeasonGridTable({
   contestantColumns,
   weekByPlayerContestant,
   pickCountByContestant,
-  weekToCount,
+  targetWeekByContestant,
   aliveRows,
   outRows,
   emptyContestantsMessage = "No contestants yet.",
@@ -126,7 +131,8 @@ export default function SeasonGridTable({
                 {c.status === "eliminated" ? " · out" : ""}
               </div>
               <div className="sp-c-sub" style={{ fontWeight: 400 }}>
-                {pickCountByContestant.get(c.id) || 0} picked{weekToCount ? ` (wk ${weekToCount})` : ""}
+                {pickCountByContestant.get(c.id) || 0} picked
+                {targetWeekByContestant.get(c.id) ? ` (wk ${targetWeekByContestant.get(c.id)})` : ""}
               </div>
             </th>
           ))}
