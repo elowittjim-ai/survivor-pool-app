@@ -12,8 +12,8 @@ export default function TabNav({ active, showResults }) {
       <Link href="/grid" className={"sp-tab" + (active === "grid" ? " sp-tab-active" : "")}>
         🗂️ Season grid
       </Link>
-      <Link href="/chat" className={"sp-tab" + (active === "chat" ? " sp-tab-active" : "")}>
-        💬 Chat
+      <Link href="/rules" className={"sp-tab" + (active === "rules" ? " sp-tab-active" : "")}>
+        📜 Rules
       </Link>
       {showResults && (
         <Link href="/results" className={"sp-tab" + (active === "results" ? " sp-tab-active" : "")}>

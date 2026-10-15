@@ -427,12 +427,15 @@ a {
 .sp-tabs {
   display: flex;
   gap: 4px;
+  overflow-x: auto;
   padding: 10px 16px 0;
   border-bottom: 1px solid var(--sp-border);
 }
 
 .sp-tab {
   display: flex;
+  flex-shrink: 0;
+  white-space: nowrap;
   align-items: center;
   gap: 6px;
   background: transparent;

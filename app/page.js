@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 import TabNav from "./TabNav";
 import AskQuestionForm from "./AskQuestionForm";
-import RulesCard from "./RulesCard";
+import ChatView from "./chat/ChatView";
 import EditNameForm from "./EditNameForm";
 
 export default async function HomePage() {
@@ -19,7 +19,7 @@ export default async function HomePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, is_approved, is_admin")
+    .select("display_name, is_approved, is_admin, chat_muted")
     .eq("id", user.id)
     .single();
 
@@ -39,6 +39,11 @@ export default async function HomePage() {
     .select("id, question, answer, answered, created_at")
     .eq("player_id", user.id)
     .order("created_at", { ascending: false });
+
+  const { data: messages } = await supabase
+    .from("chat_messages")
+    .select("id, author_id, content, flagged, deleted, created_at, profiles(display_name, is_admin)")
+    .order("created_at");
 
   return (
     <div>
@@ -76,6 +81,13 @@ export default async function HomePage() {
           </Link>
         </div>
 
+        <ChatView
+          messages={messages || []}
+          currentUserId={user.id}
+          isAdmin={!!profile.is_admin}
+          isMuted={!!profile.chat_muted}
+        />
+
         {seasonState?.commissioner_message && (
           <div className="sp-card">
             <div className="sp-section-title">📣 From the Commissioner</div>
@@ -84,8 +96,6 @@ export default async function HomePage() {
             </p>
           </div>
         )}
-
-        <RulesCard />
 
         <AskQuestionForm questions={myQuestions || []} />
       </main>

@@ -33,7 +33,7 @@ export async function postMessage(prevState, formData) {
 
   if (error) return { error: "Couldn't send — you may be muted." };
 
-  revalidatePath("/chat");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -49,6 +49,6 @@ export async function deleteMessage(prevState, formData) {
 
   if (error) return { error: "Couldn't delete — admins only." };
 
-  revalidatePath("/chat");
+  revalidatePath("/");
   return { success: true };
 }
