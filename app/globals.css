@@ -158,6 +158,11 @@ a {
   width: 100%;
 }
 
+/* Wide pages (the season grid) use the full screen instead of the 720px column. */
+.sp-main-wide {
+  max-width: none;
+}
+
 .sp-card {
   background: var(--sp-surface);
   border: 1px solid var(--sp-border);
@@ -490,6 +495,14 @@ table.sp-grid-table td {
 .sp-cell-out {
   background: var(--sp-danger-soft);
   color: #f0a99e;
+}
+
+/* The just-locked week's picks, so everyone's current pick stands out. */
+.sp-cell-current {
+  background: var(--sp-gold-soft);
+  color: var(--sp-gold);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px var(--sp-gold);
 }
 
 .sp-cell-empty {

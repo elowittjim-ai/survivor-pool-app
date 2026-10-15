@@ -66,6 +66,7 @@ export default function SeasonGridTable({
   targetWeekByContestant,
   aliveRows,
   outRows,
+  highlightWeek = null,
   emptyContestantsMessage = "No contestants yet.",
   emptyPlayersMessage = "No approved players yet.",
 }) {
@@ -90,8 +91,12 @@ export default function SeasonGridTable({
             return <td key={c.id} className="sp-cell-empty" style={columnDivider(i)}>—</td>;
           }
           const isOutHere = p.outWeek === week;
+          const className = [
+            isOutHere ? "sp-cell-out" : "sp-cell-survived",
+            week === highlightWeek ? "sp-cell-current" : "",
+          ].join(" ");
           return (
-            <td key={c.id} className={isOutHere ? "sp-cell-out" : "sp-cell-survived"} style={columnDivider(i)}>
+            <td key={c.id} className={className} style={columnDivider(i)}>
               W{week}
             </td>
           );

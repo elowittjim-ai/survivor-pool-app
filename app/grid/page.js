@@ -73,14 +73,17 @@ export default async function GridPage() {
 
       <TabNav active="grid" showResults={!!seasonState?.is_complete} />
 
-      <main className="sp-main">
+      <main className="sp-main sp-main-wide">
         <div className="sp-card">
           <div className="sp-section-title">Season grid</div>
           <p className="sp-section-sub">
-            This week&apos;s picks stay blank until picks lock.
+            {picksLocked
+              ? <>Picks are locked — everyone&apos;s week {currentWeek} pick is highlighted in gold.</>
+              : <>This week&apos;s picks stay blank until picks lock.</>}
           </p>
           <SeasonGridTable
             {...gridData}
+            highlightWeek={picksLocked ? currentWeek : null}
             emptyContestantsMessage="No contestants yet — the admin adds the cast in Admin."
           />
         </div>
