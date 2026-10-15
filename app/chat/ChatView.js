@@ -73,22 +73,12 @@ export default function ChatView({ messages, currentUserId, isAdmin, isMuted }) 
         eliminated or not.
       </p>
 
-      {messages.length === 0 ? (
-        <p className="sp-section-sub">No messages yet — be the first to say something.</p>
-      ) : (
-        <div style={{ maxHeight: 420, overflowY: "auto", marginBottom: 14 }}>
-          {messages.map((m) => (
-            <MessageRow key={m.id} message={m} isAdmin={isAdmin} />
-          ))}
-        </div>
-      )}
-
       {state?.error && <div className="sp-banner sp-banner-error" style={{ margin: "0 0 10px" }}>{state.error}</div>}
 
       {isMuted ? (
         <p className="sp-notice">You&apos;ve been muted in this chat by the admin.</p>
       ) : (
-        <form action={formAction} style={{ display: "flex", gap: 8 }}>
+        <form action={formAction} style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           <input
             className="sp-input"
             style={{ flex: 1 }}
@@ -101,6 +91,17 @@ export default function ChatView({ messages, currentUserId, isAdmin, isMuted }) 
             {pending ? "…" : "Send"}
           </button>
         </form>
+      )}
+
+      {/* Newest first, so the latest messages show without scrolling the box. */}
+      {messages.length === 0 ? (
+        <p className="sp-section-sub">No messages yet — be the first to say something.</p>
+      ) : (
+        <div style={{ maxHeight: 420, overflowY: "auto" }}>
+          {[...messages].reverse().map((m) => (
+            <MessageRow key={m.id} message={m} isAdmin={isAdmin} />
+          ))}
+        </div>
       )}
     </div>
   );
