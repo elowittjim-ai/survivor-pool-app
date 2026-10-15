@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendNewQuestionEmail } from "@/lib/email";
 
 export async function submitPick(prevState, formData) {
   const contestantId = String(formData.get("contestantId") || "");
@@ -117,6 +119,28 @@ export async function askQuestion(prevState, formData) {
   const { error } = await supabase.from("questions").insert({ player_id: user.id, question });
   if (error) {
     return { error: "Couldn't send your question — try again." };
+  }
+
+  // Let the commissioner know by email. Players can't read admins' emails
+  // under RLS, so this one narrow, server-only lookup uses the service role.
+  // A failed email never fails the question itself.
+  try {
+    const { data: asker } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+    const { data: admins } = await createAdminClient()
+      .from("profiles")
+      .select("email")
+      .eq("is_admin", true);
+    await sendNewQuestionEmail({
+      to: (admins || []).map((a) => a.email).filter(Boolean),
+      askerName: asker?.display_name,
+      question,
+    });
+  } catch (err) {
+    console.error("New-question email lookup failed:", err);
   }
 
   return { success: true };
