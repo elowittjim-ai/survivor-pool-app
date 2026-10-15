@@ -14,8 +14,6 @@ function MessageRow({ message, isAdmin }) {
   const [state, formAction, pending] = useActionState(deleteMessage, initialState);
   if (state.success) return null;
 
-  const authorIsAdmin = !!message.profiles?.is_admin;
-
   return (
     <div
       className="sp-row"
@@ -23,21 +21,11 @@ function MessageRow({ message, isAdmin }) {
         flexDirection: "column",
         alignItems: "stretch",
         opacity: message.deleted ? 0.5 : 1,
-        background: authorIsAdmin ? "var(--sp-gold-soft)" : undefined,
-        borderRadius: authorIsAdmin ? 8 : undefined,
-        padding: authorIsAdmin ? "8px 10px" : undefined,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <span>
-          <strong style={authorIsAdmin ? { color: "var(--sp-gold)" } : undefined}>
-            {message.profiles?.display_name || "Unknown"}
-          </strong>{" "}
-          {authorIsAdmin && (
-            <span className="sp-pill" style={{ background: "var(--sp-gold-soft)", color: "var(--sp-gold)" }}>
-              Commissioner
-            </span>
-          )}{" "}
+          <strong>{message.profiles?.display_name || "Unknown"}</strong>{" "}
           <span className="sp-c-sub">{timeLabel(message.created_at)}</span>
           {message.flagged && isAdmin && (
             <span className="sp-pill" style={{ marginLeft: 8, background: "var(--sp-danger-soft)", color: "#f0a99e" }}>
