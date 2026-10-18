@@ -69,6 +69,22 @@ export default async function AdminPage() {
     .select("player_id, contestants(name)")
     .eq("week", currentWeek);
 
+  // A player is out once they picked someone in the very week that contestant
+  // was eliminated — same rule as the Season Grid's buildGridData.
+  // Only picks of eliminated contestants matter, which also keeps this well
+  // under Supabase's 1000-row default limit as the season goes on.
+  const { data: allPicks } = await supabase
+    .from("picks")
+    .select("player_id, week, contestants!inner(status, eliminated_week)")
+    .eq("contestants.status", "eliminated");
+  const outPlayerIds = [
+    ...new Set(
+      (allPicks || [])
+        .filter((p) => p.contestants?.status === "eliminated" && p.contestants.eliminated_week === p.week)
+        .map((p) => p.player_id)
+    ),
+  ];
+
   const { data: questions } = await supabase
     .from("questions")
     .select("id, question, answer, answered, created_at, profiles(display_name)")
@@ -105,6 +121,7 @@ export default async function AdminPage() {
           isComplete={!!seasonState?.is_complete}
           commissionerMessage={seasonState?.commissioner_message}
           currentWeekPicks={currentWeekPicks || []}
+          outPlayerIds={outPlayerIds}
           picksLocked={!!seasonState?.picks_locked}
           seasonStarted={!!seasonState?.season_started}
           questions={questions || []}

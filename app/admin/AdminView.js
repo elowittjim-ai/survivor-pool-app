@@ -353,20 +353,24 @@ function PlayersCard({ approvedPlayers, currentUserId }) {
   );
 }
 
-function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek }) {
+function CurrentPicksCard({ approvedPlayers, currentWeekPicks, currentWeek, outPlayerIds }) {
   const pickByPlayer = new Map(currentWeekPicks.map((p) => [p.player_id, p.contestants?.name]));
-  const pickedCount = approvedPlayers.filter((p) => pickByPlayer.has(p.id)).length;
+  // Players already out of the pool don't pick anymore, so leave them off.
+  const outIds = new Set(outPlayerIds);
+  const alivePlayers = approvedPlayers.filter((p) => !outIds.has(p.id));
+  const pickedCount = alivePlayers.filter((p) => pickByPlayer.has(p.id)).length;
 
   return (
     <div className="sp-card">
       <div className="sp-section-title">Week {currentWeek} picks so far</div>
       <p className="sp-section-sub">
-        {pickedCount} of {approvedPlayers.length} players have picked.
+        {pickedCount} of {alivePlayers.length} players still in it have picked.
+        {outIds.size > 0 && ` (${approvedPlayers.length - alivePlayers.length} already out not shown.)`}
       </p>
-      {approvedPlayers.length === 0 ? (
-        <p className="sp-section-sub">No approved players yet.</p>
+      {alivePlayers.length === 0 ? (
+        <p className="sp-section-sub">No players still in it.</p>
       ) : (
-        approvedPlayers.map((p) => {
+        alivePlayers.map((p) => {
           const pick = pickByPlayer.get(p.id);
           return (
             <div key={p.id} className="sp-row">
@@ -788,6 +792,7 @@ export default function AdminView({
   isComplete,
   commissionerMessage,
   currentWeekPicks,
+  outPlayerIds,
   picksLocked,
   seasonStarted,
   questions,
@@ -842,6 +847,7 @@ export default function AdminView({
             approvedPlayers={approvedPlayers}
             currentWeekPicks={currentWeekPicks}
             currentWeek={currentWeek}
+            outPlayerIds={outPlayerIds}
           />
         </>
       )}
