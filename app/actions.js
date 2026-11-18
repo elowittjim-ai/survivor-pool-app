@@ -45,6 +45,19 @@ export async function submitPick(prevState, formData) {
     return { error: "You've been eliminated and can't submit picks anymore." };
   }
 
+  // A pick screen left open from before an elimination still lists that
+  // contestant, so check their status here too. Revalidating swaps the stale
+  // list for the current one.
+  const { data: contestant } = await supabase
+    .from("contestants")
+    .select("status")
+    .eq("id", contestantId)
+    .maybeSingle();
+  if (contestant?.status !== "active") {
+    revalidatePath("/pick");
+    return { error: "That contestant is out of the game. Please pick someone else." };
+  }
+
   // RLS also enforces player_id = auth.uid(), is_approved, and week = current
   // week — this upsert can only ever affect the caller's own current pick.
   const { error } = await supabase
